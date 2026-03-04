@@ -1,0 +1,9 @@
+node_modules/
+*.cpuprofile
+*.pb.gz
+*.d.ts
+!src/types/*.d.ts
+dist/
+.docs/
+.claude/
+.env

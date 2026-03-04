@@ -1,0 +1,49 @@
+# Development files
+.vscode/**
+.vscode-test/**
+src/**
+out/**
+test/**
+fixtures/**
+
+# Config files
+.gitignore
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/.eslintrc*
+**/.prettierrc*
+esbuild.js
+
+# Source maps and TypeScript
+**/*.map
+**/*.ts
+!dist/**/*.js
+
+# Dependencies (bundled via esbuild)
+node_modules/**
+.pnpm-store/**
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Documentation (except README)
+*.md
+!README.md
+!CHANGELOG.md
+CLAUDE.md
+
+# Scripts and tools
+PLAN.MD
+.claude/
+.github/**
+.husky/**
+scripts/**
+eslint.config.mjs
+pnpm-workspace.yaml
+
+# Build artifacts
+*.vsix

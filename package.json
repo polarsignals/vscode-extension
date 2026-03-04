@@ -1,0 +1,263 @@
+{
+  "name": "polar-signals-profiler",
+  "displayName": "Polar Signals Profiler",
+  "version": "1.1.0",
+  "description": "View profiling data from Parca or Polar Signals Cloud directly in VS Code. See CPU, memory, and other profiling annotations inline with your source code.",
+  "publisher": "polarsignals",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polarsignals/vscode-extension"
+  },
+  "homepage": "https://www.polarsignals.com",
+  "bugs": {
+    "url": "https://github.com/polarsignals/vscode-extension/issues"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Visualization",
+    "Other"
+  ],
+  "galleryBanner": {
+    "color": "#1a1a2e",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onUri"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "authentication": [
+      {
+        "id": "polarsignals",
+        "label": "Polar Signals"
+      }
+    ],
+    "commands": [
+      {
+        "command": "polarSignals.fetchProfile",
+        "title": "Polar Signals: Fetch Profile for Current File"
+      },
+      {
+        "command": "polarSignals.clearAnnotations",
+        "title": "Polar Signals: Clear Profiling Annotations"
+      },
+      {
+        "command": "polarSignals.selectPreset",
+        "title": "Polar Signals: Select Preset"
+      },
+      {
+        "command": "polarSignals.fetchWithPreset",
+        "title": "Polar Signals: Fetch with Preset"
+      },
+      {
+        "command": "polarSignals.showStatusMenu",
+        "title": "Polar Signals: Quick Actions"
+      },
+      {
+        "command": "polarSignals.configureDefaults",
+        "title": "Polar Signals: Configure Defaults"
+      },
+      {
+        "command": "polarSignals.importFromUrl",
+        "title": "Polar Signals: Import from URL"
+      },
+      {
+        "command": "polarSignals.signOut",
+        "title": "Polar Signals: Sign Out from Polar Signals Cloud"
+      },
+      {
+        "command": "polarSignals.switchProject",
+        "title": "Polar Signals: Switch Polar Signals Cloud Project"
+      },
+      {
+        "command": "polarSignals.setupMode",
+        "title": "Polar Signals: Setup Mode"
+      },
+      {
+        "command": "polarSignals.manageRepoMappings",
+        "title": "Polar Signals: Manage Repository Mappings"
+      },
+      {
+        "command": "polarSignals.copyLineForAI",
+        "title": "Polar Signals: Copy Line for AI Analysis"
+      },
+      {
+        "command": "polarSignals.copyFileForAI",
+        "title": "Polar Signals: Copy File Summary for AI"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "polarSignals.fetchWithPreset",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Polar Signals Profiler",
+      "properties": {
+        "polarSignals.mode": {
+          "type": "string",
+          "enum": [
+            "cloud",
+            "oss"
+          ],
+          "enumDescriptions": [
+            "Connect to Polar Signals Cloud (requires API token)",
+            "Connect to self-hosted Parca (no authentication)"
+          ],
+          "description": "Operating mode: 'cloud' for Polar Signals Cloud, 'oss' for self-hosted Parca"
+        },
+        "polarSignals.cloudUrl": {
+          "type": "string",
+          "default": "https://api.polarsignals.com",
+          "description": "Polar Signals Cloud API URL (used in cloud mode)"
+        },
+        "polarSignals.selfHostedUrl": {
+          "type": "string",
+          "default": "http://localhost:7070",
+          "description": "Parca server URL (used in OSS mode)"
+        },
+        "polarSignals.defaultTimeRange": {
+          "type": "string",
+          "default": "15m",
+          "description": "Default time range for profile queries (e.g., 15m, 1h, 24h, 7d)"
+        },
+        "polarSignals.profileType": {
+          "type": "string",
+          "default": "parca_agent:samples:count:cpu:nanoseconds:delta",
+          "description": "Default profile type to query"
+        },
+        "polarSignals.queryLabels": {
+          "type": "object",
+          "default": {},
+          "description": "Label selectors to filter profiling data (e.g., {\"comm\": \"api\", \"namespace\": \"production\"})"
+        },
+        "polarSignals.presets": {
+          "type": "array",
+          "default": [],
+          "description": "Custom query presets (merged with built-in presets). Each preset should have: id, name, profileType, timeRange, and optional labelMatchers.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "profileType",
+              "timeRange"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the preset"
+              },
+              "name": {
+                "type": "string",
+                "description": "Display name for the preset"
+              },
+              "description": {
+                "type": "string",
+                "description": "Optional description"
+              },
+              "profileType": {
+                "type": "string",
+                "description": "Full profile type string"
+              },
+              "timeRange": {
+                "type": "string",
+                "description": "Time range (e.g., 15m, 1h, 24h)"
+              },
+              "labelMatchers": {
+                "type": "object",
+                "description": "Optional label matchers"
+              }
+            }
+          }
+        },
+        "polarSignals.repoScanPaths": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional directories to scan for repositories when resolving deep link file paths (e.g., ~/code, ~/go/src)"
+        },
+        "polarSignals.autoScanOnMiss": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically scan common directories for git repositories when a deep link file cannot be found"
+        },
+        "polarSignals.autoFetchOnFileOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically fetch profiling data when opening a file, using the last query configuration"
+        },
+        "polarSignals.projectId": {
+          "type": "string",
+          "description": "Polar Signals project ID (required for cloud mode with OAuth)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run esbuild-base -- --minify",
+    "compile": "pnpm run esbuild-base -- --sourcemap",
+    "watch": "pnpm run esbuild-base -- --sourcemap --watch",
+    "esbuild-base": "node esbuild.js",
+    "typecheck": "tsc --noEmit -p ./",
+    "build": "pnpm run esbuild-base",
+    "package": "pnpm run vscode:prepublish && vsce package --no-dependencies",
+    "publish": "pnpm run build && vsce publish --no-dependencies",
+    "lint": "eslint src/",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepare": "husky",
+    "release": "./scripts/release.sh",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 1 && node scripts/fix-changelog.js"
+  },
+  "keywords": [
+    "polar-signals",
+    "parca",
+    "pprof",
+    "cpuprofile",
+    "profiling",
+    "performance"
+  ],
+  "author": "Polar Signals",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@parca/client": "^0.17.8",
+    "@protobuf-ts/grpcweb-transport": "^2.9.0",
+    "@protobuf-ts/runtime": "^2.9.0",
+    "@protobuf-ts/runtime-rpc": "^2.9.0",
+    "@uwdata/flechette": "^2.3.0",
+    "lz4js": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.2",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "@vscode/vsce": "^3.2.2",
+    "conventional-changelog": "^7.2.0",
+    "conventional-changelog-angular": "^8.3.0",
+    "esbuild": "^0.25.4",
+    "eslint": "^10.0.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
+    "prettier": "^3.8.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
