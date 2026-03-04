@@ -49,8 +49,12 @@ pnpm version "$BUMP_TYPE" --no-git-tag-version
 NEW_VERSION=$(node -p "require('./package.json').version")
 echo "New version: $NEW_VERSION"
 
+# Generate changelog
+echo "Generating changelog..."
+pnpm changelog
+
 # Commit and tag
-git add package.json
+git add package.json CHANGELOG.md
 git commit -m "Release v$NEW_VERSION"
 git tag "v$NEW_VERSION"
 

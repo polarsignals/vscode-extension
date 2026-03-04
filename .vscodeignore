@@ -41,6 +41,7 @@ PLAN.MD
 .claude/
 .github/**
 .husky/**
+scripts/**
 eslint.config.mjs
 pnpm-workspace.yaml
 
