@@ -64,6 +64,7 @@ export async function silentFetchProfile(options: SilentFetchOptions): Promise<v
   const allLineData = parseSourceArrow(sourceResult.record);
   if (allLineData.length === 0) {
     console.log(`[${brandName}] Auto-fetch: No profiling data found for ${fileName}`);
+    getStatusBar().showNoProfile();
     return;
   }
 

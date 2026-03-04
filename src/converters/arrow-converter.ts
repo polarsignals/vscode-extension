@@ -237,14 +237,7 @@ export class ArrowToCpuProfileConverter {
 
   private matchesFile(arrowFileName: string, filterPath: string): boolean {
     if (!arrowFileName || !filterPath) return false;
-
-    if (arrowFileName === filterPath) return true;
-
-    if (arrowFileName.endsWith(filterPath)) return true;
-
-    if (arrowFileName.includes(filterPath)) return true;
-
-    return false;
+    return arrowFileName.includes(filterPath);
   }
 
   private throwNoDataError(): never {
@@ -279,11 +272,6 @@ export class ArrowToCpuProfileConverter {
     try {
       const value = row[field];
       if (value === null || value === undefined) return 0;
-
-      if (typeof value === 'bigint') {
-        return Number(value);
-      }
-
       return Number(value);
     } catch {
       return 0;
@@ -437,14 +425,7 @@ export class ArrowToCpuProfileConverter {
   }
 
   private generateTimeDeltas(sampleCount: number): number[] {
-    const timeDeltas: number[] = [];
-    const defaultDelta = 10000;
-
-    for (let i = 0; i < sampleCount; i++) {
-      timeDeltas.push(defaultDelta);
-    }
-
-    return timeDeltas;
+    return Array(sampleCount).fill(10000);
   }
 }
 

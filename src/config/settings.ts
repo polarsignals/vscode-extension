@@ -13,9 +13,7 @@ export function onConfigChange(callback: () => void): void {
 }
 
 function notifyConfigChange(): void {
-  for (const callback of configChangeCallbacks) {
-    callback();
-  }
+  configChangeCallbacks.forEach(cb => cb());
 }
 
 let cachedConfig: PolarSignalsConfig | null = null;
@@ -34,9 +32,7 @@ export interface PolarSignalsConfig {
 }
 
 export function getMode(): ProfilerMode | null {
-  const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
-  const mode = config.get<ProfilerMode>('mode');
-  return mode ?? null;
+  return vscode.workspace.getConfiguration(CONFIG_SECTION).get<ProfilerMode>('mode') ?? null;
 }
 
 export async function setMode(mode: ProfilerMode): Promise<void> {
@@ -62,14 +58,8 @@ export function getApiUrl(): string {
 }
 
 export function normalizeUrl(url: string): string {
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-
-  if (url.startsWith('localhost') || url.startsWith('127.0.0.1')) {
-    return `http://${url}`;
-  }
-
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('localhost') || url.startsWith('127.0.0.1')) return `http://${url}`;
   return `https://${url}`;
 }
 

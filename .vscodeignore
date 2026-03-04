@@ -36,6 +36,7 @@ yarn.lock
 
 # Scripts and tools
 PLAN.MD
+.claude/
 
 # Build artifacts
 *.vsix

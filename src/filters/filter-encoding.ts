@@ -74,51 +74,49 @@ export function decodeFilters(encoded: string): ProfileFilter[] {
 
   try {
     const decodedString = safeDecodeURI(encoded);
+    const results: ProfileFilter[] = [];
 
-    return decodedString
-      .split(',')
-      .map((filter, index) => {
-        const parts = filter.split(':');
+    for (const [index, filter] of decodedString.split(',').entries()) {
+      const parts = filter.split(':');
 
-        if (parts[0] === 'p' && parts.length >= 3) {
-          const presetKey = parts[1];
-          const value = parts.slice(2).join(':');
-
-          return {
-            id: generateFilterId({type: presetKey, value}, index),
-            type: presetKey,
-            value: safeDecodeURI(value),
-          };
-        }
-
-        const [type, field, match, ...valueParts] = parts;
-        const value = valueParts.join(':');
-
-        const decodedType = TYPE_MAP_REVERSE[type] as ProfileFilter['type'];
-        const decodedField = FIELD_MAP_REVERSE[field] as ProfileFilter['field'];
-        const decodedMatch = MATCH_MAP_REVERSE[match] as ProfileFilter['matchType'];
-
-        if (!decodedType || !decodedField || !decodedMatch) {
-          return null;
-        }
-
-        return {
-          id: generateFilterId(
-            {
-              type: decodedType,
-              field: decodedField,
-              matchType: decodedMatch,
-              value: safeDecodeURI(value),
-            },
-            index,
-          ),
-          type: decodedType,
-          field: decodedField,
-          matchType: decodedMatch,
+      if (parts[0] === 'p' && parts.length >= 3) {
+        const presetKey = parts[1];
+        const value = parts.slice(2).join(':');
+        results.push({
+          id: generateFilterId({type: presetKey, value}, index),
+          type: presetKey,
           value: safeDecodeURI(value),
-        };
-      })
-      .filter((f): f is ProfileFilter => f !== null);
+        });
+        continue;
+      }
+
+      const [type, field, match, ...valueParts] = parts;
+      const value = valueParts.join(':');
+
+      const decodedType = TYPE_MAP_REVERSE[type] as ProfileFilter['type'];
+      const decodedField = FIELD_MAP_REVERSE[field] as ProfileFilter['field'];
+      const decodedMatch = MATCH_MAP_REVERSE[match] as ProfileFilter['matchType'];
+
+      if (!decodedType || !decodedField || !decodedMatch) continue;
+
+      results.push({
+        id: generateFilterId(
+          {
+            type: decodedType,
+            field: decodedField,
+            matchType: decodedMatch,
+            value: safeDecodeURI(value),
+          },
+          index,
+        ),
+        type: decodedType,
+        field: decodedField,
+        matchType: decodedMatch,
+        value: safeDecodeURI(value),
+      });
+    }
+
+    return results;
   } catch {
     return [];
   }

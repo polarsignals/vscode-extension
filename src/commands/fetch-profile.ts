@@ -77,6 +77,9 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
         if (allLineData.length === 0) {
           getStatusBar().showNoProfile();
           console.log(`[${brandName}] No profiling data found for ${fileName}`);
+          vscode.window.showWarningMessage(
+            'No profiling data found for this file in the selected time range',
+          );
           return;
         }
 
