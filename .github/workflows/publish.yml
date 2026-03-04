@@ -31,6 +31,6 @@ jobs:
         run: pnpm lint
 
       - name: Publish to Marketplace
-        run: pnpm publish
+        run: pnpm run build && vsce publish --no-dependencies
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
