@@ -23,6 +23,7 @@ esbuild.js
 
 # Dependencies (bundled via esbuild)
 node_modules/**
+.pnpm-store/**
 
 # Lock files
 pnpm-lock.yaml
@@ -37,6 +38,7 @@ yarn.lock
 # Scripts and tools
 PLAN.MD
 .claude/
+.github/**
 .husky/**
 eslint.config.mjs
 pnpm-workspace.yaml
