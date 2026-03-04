@@ -1,3 +1,5 @@
+packages:
+  - '.'
 ignoredBuiltDependencies:
   - '@vscode/vsce-sign'
   - esbuild
