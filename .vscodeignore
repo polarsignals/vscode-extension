@@ -37,6 +37,9 @@ yarn.lock
 # Scripts and tools
 PLAN.MD
 .claude/
+.husky/**
+eslint.config.mjs
+pnpm-workspace.yaml
 
 # Build artifacts
 *.vsix

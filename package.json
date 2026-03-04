@@ -202,7 +202,7 @@
     "esbuild-base": "node esbuild.js",
     "typecheck": "tsc --noEmit -p ./",
     "build": "pnpm run esbuild-base",
-    "package": "pnpm run build && vsce package --no-dependencies",
+    "package": "pnpm run vscode:prepublish && vsce package --no-dependencies",
     "publish": "pnpm run build && vsce publish --no-dependencies",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.ts\"",
