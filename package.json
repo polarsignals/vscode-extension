@@ -206,7 +206,8 @@
     "publish": "pnpm run build && vsce publish --no-dependencies",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "./scripts/release.sh"
   },
   "keywords": [
     "polar-signals",
