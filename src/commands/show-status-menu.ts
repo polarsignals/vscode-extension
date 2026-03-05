@@ -28,11 +28,18 @@ export async function showStatusMenuCommand(_context: vscode.ExtensionContext): 
   ];
 
   if (hasProfile) {
-    items.push({
-      label: '$(trash) Clear Annotations',
-      description: 'Remove profiling annotations from current file',
-      action: 'clear',
-    });
+    items.push(
+      {
+        label: '$(copy) Copy File Summary for AI',
+        description: 'Copy profiling summary to paste into AI assistant',
+        action: 'copy-file-for-ai',
+      },
+      {
+        label: '$(trash) Clear Annotations',
+        description: 'Remove profiling annotations from current file',
+        action: 'clear',
+      },
+    );
   }
 
   if (mode !== 'oss') {
@@ -74,6 +81,9 @@ export async function showStatusMenuCommand(_context: vscode.ExtensionContext): 
       break;
     case 'clear':
       await vscode.commands.executeCommand('polarSignals.clearAnnotations');
+      break;
+    case 'copy-file-for-ai':
+      await vscode.commands.executeCommand('polarSignals.copyFileForAI');
       break;
     case 'import':
       await vscode.commands.executeCommand('polarSignals.importFromUrl');

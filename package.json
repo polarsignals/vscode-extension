@@ -80,6 +80,14 @@
       {
         "command": "polarSignals.manageRepoMappings",
         "title": "Polar Signals: Manage Repository Mappings"
+      },
+      {
+        "command": "polarSignals.copyLineForAI",
+        "title": "Polar Signals: Copy Line for AI Analysis"
+      },
+      {
+        "command": "polarSignals.copyFileForAI",
+        "title": "Polar Signals: Copy File Summary for AI"
       }
     ],
     "menus": {

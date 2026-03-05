@@ -4,6 +4,7 @@ import * as lz4 from 'lz4js';
 import {fetchProfileCommand, restoreCachedAnnotations} from './commands/fetch-profile';
 import {clearAnnotationsCommand} from './commands/clear-annotations';
 import {showStatusMenuCommand} from './commands/show-status-menu';
+import {copyLineForAI, copyFileForAI} from './commands/copy-for-ai';
 import {configureDefaultsCommand} from './commands/configure-defaults';
 import {selectPresetCommand} from './commands/select-preset';
 import {fetchWithPresetCommand} from './commands/fetch-with-preset';
@@ -147,6 +148,20 @@ export async function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  const copyLineForAICmd = vscode.commands.registerCommand(
+    'polarSignals.copyLineForAI',
+    async (args: {line: number}) => {
+      await copyLineForAI(args);
+    },
+  );
+
+  const copyFileForAICmd = vscode.commands.registerCommand(
+    'polarSignals.copyFileForAI',
+    async () => {
+      await copyFileForAI();
+    },
+  );
+
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(e => {
     if (e.affectsConfiguration('polarSignals')) {
       invalidateConfigCache();
@@ -232,6 +247,8 @@ export async function activate(context: vscode.ExtensionContext) {
     signOut,
     switchProject,
     manageRepoMappings,
+    copyLineForAICmd,
+    copyFileForAICmd,
     configChangeListener,
     editorChangeListener,
     autoFetchCleanup,

@@ -164,7 +164,7 @@ export class ProfilingAnnotations {
 
       const decoration: vscode.DecorationOptions = {
         range: block.range,
-        hoverMessage: this.createBlockHoverMessage(block),
+        hoverMessage: this.createBlockHoverMessage(block, intensity),
       };
 
       blockDecorationsByType.get(heatLevel)?.push(decoration);
@@ -209,7 +209,7 @@ export class ProfilingAnnotations {
             fontStyle: 'italic',
           },
         },
-        hoverMessage: this.createHoverMessage(data, lineNumber),
+        hoverMessage: this.createHoverMessage(data, lineNumber, intensity),
       };
 
       lineDecorations.push(decoration);
@@ -390,14 +390,19 @@ export class ProfilingAnnotations {
     return endLine;
   }
 
-  private createBlockHoverMessage(block: {
-    functionName: string;
-    startLine: number;
-    endLine: number;
-    cumulative: number;
-    flat: number;
-  }): vscode.MarkdownString {
+  private createBlockHoverMessage(
+    block: {
+      functionName: string;
+      startLine: number;
+      endLine: number;
+      cumulative: number;
+      flat: number;
+    },
+    intensity: number,
+  ): vscode.MarkdownString {
     const md = new vscode.MarkdownString();
+    md.isTrusted = true;
+    md.supportThemeIcons = true;
     md.appendMarkdown(`### 🔥 Hot Function\n\n`);
     md.appendMarkdown(`**Function:** \`${block.functionName}\`\n\n`);
     md.appendMarkdown(`**Lines:** ${block.startLine}-${block.endLine}\n\n`);
@@ -417,14 +422,25 @@ export class ProfilingAnnotations {
         2,
       )}${this.formatPercentage(block.cumulative)}*\n`,
     );
+
+    if (intensity > 0.4) {
+      const args = encodeURIComponent(JSON.stringify({line: block.startLine}));
+      md.appendMarkdown(
+        `\n\n[$(sparkle) Copy for AI Analysis](command:polarSignals.copyLineForAI?${args})`,
+      );
+    }
+
     return md;
   }
 
   private createHoverMessage(
     data: {cumulative: number; flat: number; functions: string[]},
     lineNumber: number,
+    intensity: number,
   ): vscode.MarkdownString {
     const md = new vscode.MarkdownString();
+    md.isTrusted = true;
+    md.supportThemeIcons = true;
     md.appendMarkdown(`### Profiling Data (Line ${lineNumber})\n\n`);
     md.appendMarkdown(
       `**Cumulative:** ${this.formatValue(data.cumulative, false, 2)}${this.formatPercentage(
@@ -443,6 +459,13 @@ export class ProfilingAnnotations {
       if (data.functions.length > 5) {
         md.appendMarkdown(`- ... and ${data.functions.length - 5} more\n`);
       }
+    }
+
+    if (intensity > 0.4) {
+      const args = encodeURIComponent(JSON.stringify({line: lineNumber}));
+      md.appendMarkdown(
+        `\n\n[$(sparkle) Copy for AI Analysis](command:polarSignals.copyLineForAI?${args})`,
+      );
     }
 
     return md;
