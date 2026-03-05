@@ -1,5 +1,14 @@
 # Changelog
 
+# [1.1.0](https://github.com/polarsignals/vscode-extension/compare/v1.0.3...v1.1.0) (2026-03-05)
+
+
+### Features
+
+* Add Copy line for ai analysis feature ([734bd5a](https://github.com/polarsignals/vscode-extension/commit/734bd5a8cf6f26dcd1e6536dca8766ee46b7b18a))
+
+# Changelog
+
 ## [1.0.3](https://github.com/polarsignals/vscode-extension/compare/v1.0.2...v1.0.3) (2026-03-05)
 
 # Changelog
