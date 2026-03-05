@@ -82,7 +82,20 @@ jobs:
       - name: Run lint
         run: pnpm lint
 
-      - name: Publish to Marketplace
-        run: pnpm run build && pnpm exec vsce publish --no-dependencies
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      - name: Package extension
+        run: pnpm exec vsce package --no-dependencies -o extension.vsix
+
+      - name: Publish to Open VSX
+        uses: HaaLeo/publish-vscode-extension@v2
+        with:
+          pat: ${{ secrets.OVSX_PAT }}
+          extensionFile: extension.vsix
+          skipDuplicate: true
+
+      - name: Publish to VS Code Marketplace
+        uses: HaaLeo/publish-vscode-extension@v2
+        with:
+          pat: ${{ secrets.VSCE_PAT }}
+          registryUrl: https://marketplace.visualstudio.com
+          extensionFile: extension.vsix
+          skipDuplicate: true
