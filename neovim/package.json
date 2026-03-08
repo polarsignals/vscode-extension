@@ -5,7 +5,8 @@
   "private": true,
   "main": "scripts/parca-client.js",
   "scripts": {
-    "start": "node scripts/parca-client.js"
+    "start": "node scripts/parca-client.js",
+    "build": "esbuild scripts/parca-client.js --bundle --platform=node --format=cjs --outfile=scripts/parca-client.bundle.js"
   },
   "dependencies": {
     "@parca/client": "*",

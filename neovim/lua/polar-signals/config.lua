@@ -39,8 +39,12 @@ local _config = vim.deepcopy(defaults)
 --- Return the path to parca-client.js, auto-detected from this file's location.
 local function default_script_path()
   local src = debug.getinfo(1, 'S').source:sub(2) -- strip leading '@'
-  -- lua/polar-signals/config.lua -> ../../scripts/parca-client.js
+  -- lua/polar-signals/config.lua -> ../../scripts/parca-client.bundle.js
   local dir = vim.fn.fnamemodify(src, ':h:h:h')
+  local bundle = dir .. '/scripts/parca-client.bundle.js'
+  if vim.fn.filereadable(bundle) == 1 then
+    return bundle
+  end
   return dir .. '/scripts/parca-client.js'
 end
 

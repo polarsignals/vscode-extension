@@ -210,6 +210,7 @@
     "esbuild-base": "node esbuild.js",
     "typecheck": "tsc --noEmit -p ./",
     "build": "pnpm run esbuild-base",
+    "build:nvim": "esbuild neovim/scripts/parca-client.js --bundle --platform=node --format=cjs --outfile=neovim/scripts/parca-client.bundle.js",
     "package": "pnpm run vscode:prepublish && vsce package --no-dependencies",
     "publish": "pnpm run build && vsce publish --no-dependencies",
     "lint": "eslint src/",

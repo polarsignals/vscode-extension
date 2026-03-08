@@ -38,6 +38,7 @@ ported to Neovim.
 ```lua
 {
   'polarsignals/polar-signals.nvim',
+  build = 'npm run build',
   config = function()
     require('polar-signals').setup({})
     -- Defaults to Polar Signals Cloud. Run :PolarSignalsSignIn to authenticate.
@@ -60,12 +61,13 @@ use {
 ### Manual
 
 Clone the repo and add `neovim/` to your `runtimepath`, then install the Node
-dependencies:
+dependencies and build the helper bundle:
 
 ```bash
 git clone https://github.com/polarsignals/vscode-extension /tmp/polar-signals
-cd /tmp/polar-signals/neovim
-npm install   # or: pnpm install / yarn install
+cd /tmp/polar-signals
+pnpm install
+pnpm run build:nvim
 ```
 
 Add to Neovim config:
@@ -225,7 +227,8 @@ polar-signals.nvim/
 ├── plugin/
 │   └── polar-signals.lua   -- Neovim plugin guard
 └── scripts/
-    └── parca-client.js     -- Node.js gRPC/HTTP helper
+    ├── parca-client.js            -- Node.js gRPC/HTTP helper (source)
+    └── parca-client.bundle.js     -- esbuild bundle (run `pnpm run build:nvim`)
 ```
 
 ### Data Flow

@@ -4,6 +4,7 @@ node_modules/
 *.d.ts
 !src/types/*.d.ts
 dist/
+neovim/scripts/parca-client.bundle.js
 .docs/
 .claude/
 .env
