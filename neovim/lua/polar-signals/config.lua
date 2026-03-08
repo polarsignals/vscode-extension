@@ -19,7 +19,7 @@ local M = {}
 
 ---@type PolarSignalsConfig
 local defaults = {
-  mode = 'oss',
+  mode = 'cloud',
   cloud_url = 'https://api.polarsignals.com',
   self_hosted_url = 'http://localhost:7070',
   oauth_token = nil,

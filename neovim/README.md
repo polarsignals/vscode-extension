@@ -39,11 +39,9 @@ ported to Neovim.
 {
   'polarsignals/polar-signals.nvim',
   config = function()
-    require('polar-signals').setup({
-      -- 'oss' for self-hosted Parca, 'cloud' for Polar Signals Cloud
-      mode = 'oss',
-      self_hosted_url = 'http://localhost:7070',
-    })
+    require('polar-signals').setup({})
+    -- Defaults to Polar Signals Cloud. Run :PolarSignalsSignIn to authenticate.
+    -- For self-hosted Parca: setup({ mode = 'oss', self_hosted_url = 'http://localhost:7070' })
   end,
 }
 ```
