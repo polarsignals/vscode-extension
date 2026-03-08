@@ -117,14 +117,18 @@ function M.sign_in(cb)
 
   -- 2. Pick a random local port
   local port = math.random(30000, 39999)
-  local redirect_uri = 'http://localhost:' .. port .. '/callback'
+  local redirect_uri = 'http://127.0.0.1:' .. port
+  local state = random_hex(16)
 
-  -- 3. Build the auth URL
+  -- 3. Build the auth URL (must include auth_endpoint so the CLI login page
+  --    knows where to forward the PKCE flow)
   local params = {
-    'response_type=code',
+    'auth_endpoint=' .. vim.uri_encode(AUTH_BASE .. '/auth'),
     'client_id=' .. CLIENT_ID,
+    'response_type=code',
     'redirect_uri=' .. vim.uri_encode(redirect_uri),
     'scope=' .. vim.uri_encode(SCOPES),
+    'state=' .. state,
     'code_challenge=' .. challenge,
     'code_challenge_method=S256',
   }
