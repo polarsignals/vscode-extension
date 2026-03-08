@@ -1,0 +1,19 @@
+{
+  "name": "polar-signals-nvim-helper",
+  "version": "1.0.0",
+  "description": "Node.js gRPC helper for the polar-signals.nvim Neovim plugin",
+  "private": true,
+  "main": "scripts/parca-client.js",
+  "scripts": {
+    "start": "node scripts/parca-client.js"
+  },
+  "dependencies": {
+    "@parca/client": "*",
+    "@protobuf-ts/grpcweb-transport": "*",
+    "@protobuf-ts/runtime": "*",
+    "@protobuf-ts/runtime-rpc": "*"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
