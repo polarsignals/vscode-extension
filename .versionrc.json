@@ -1,0 +1,10 @@
+{
+  "header": "# Changelog\n",
+  "types": [
+    {"type": "feat", "section": "Features"},
+    {"type": "fix", "section": "Bug Fixes"},
+    {"type": "perf", "section": "Performance"}
+  ],
+  "commitUrlFormat": "https://github.com/polarsignals/vscode-extension/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/polarsignals/vscode-extension/compare/{{previousTag}}...{{currentTag}}"
+}
