@@ -55,7 +55,6 @@ export async function silentFetchProfile(options: SilentFetchOptions): Promise<v
   if (signal?.aborted) return;
 
   const sourceResult = await client.querySourceReport(query, queryConfig.timeRange, {
-    buildId: '',
     filename: relativeFilePath,
   });
 
@@ -113,7 +112,7 @@ export async function silentFetchProfile(options: SilentFetchOptions): Promise<v
       sessionStore.store(localPath, {
         ...cacheData,
         lineData: fileLineData,
-        sourceFile: {filename: remoteFilename, buildId: ''},
+        sourceFile: {filename: remoteFilename},
       });
     }
   }
@@ -121,7 +120,7 @@ export async function silentFetchProfile(options: SilentFetchOptions): Promise<v
   sessionStore.store(currentFilePath, {
     ...cacheData,
     lineData,
-    sourceFile: {filename: selectedFilename, buildId: ''},
+    sourceFile: {filename: selectedFilename},
   });
 
   getStatusBar().showActiveProfile({

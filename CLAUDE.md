@@ -35,7 +35,7 @@ Entry point is `src/extension.ts`. Modules under `src/`:
 - **state/** — In-memory session cache (per-file profiles, last query config)
 - **types/** — Shared TypeScript type declarations
 - **ui/** — Status bar, query configurator quick-pick flows
-- **uri/** — Deep link handler (`/configure`, `/open` actions)
+- **uri/** — Deep link handler (`/configure` action)
 
 ## Code Style
 

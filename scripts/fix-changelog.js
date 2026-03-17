@@ -7,7 +7,7 @@ const file = path.join(__dirname, '..', 'CHANGELOG.md');
 let content = fs.readFileSync(file, 'utf8');
 
 // Remove any existing header variations and leading whitespace
-content = content.replace(/^\s*(#\s*Changelog\s*\n+)?/i, '');
+content = content.replace(/^#\s*Changelog\s*\n+/gim, '');
 
 // Add proper header
 content = '# Changelog\n\n' + content;

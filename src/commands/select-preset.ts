@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import {showPresetPicker} from '../presets/preset-picker';
-import {getConfig, getBrandNameShort} from '../config/settings';
+import {getConfig, getBrandNameShort, getAutoScrollToAnnotation} from '../config/settings';
 import {ProfilerClient} from '../api/profiler-client';
 import {
   parseSourceArrow,
@@ -12,6 +12,7 @@ import {
 import {getAnnotations} from '../annotations/annotation-manager';
 import {sessionStore} from '../state/session-store';
 import {getStatusBar} from '../ui/status-bar';
+import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
 
 /**
  * Select a preset and fetch profiling data using it.
@@ -25,7 +26,7 @@ export async function selectPresetCommand(context: vscode.ExtensionContext): Pro
       return;
     }
 
-    const preset = await showPresetPicker();
+    const preset = await showPresetPicker(context);
     if (!preset) {
       return;
     }
@@ -63,7 +64,6 @@ export async function selectPresetCommand(context: vscode.ExtensionContext): Pro
 
         progress.report({message: 'Fetching line-level profiling data...'});
         const sourceResult = await client.querySourceReport(query, preset.timeRange, {
-          buildId: '',
           filename: relativeFilePath,
         });
 
@@ -129,7 +129,7 @@ export async function selectPresetCommand(context: vscode.ExtensionContext): Pro
           total: sourceResult.total,
           filtered: sourceResult.filtered,
           queryConfig,
-          sourceFile: {filename: selectedFilename, buildId: ''},
+          sourceFile: {filename: selectedFilename},
           timestamp: Date.now(),
         });
 
@@ -144,6 +144,10 @@ export async function selectPresetCommand(context: vscode.ExtensionContext): Pro
           timeRange: preset.timeRange,
           labelMatchers: preset.labelMatchers,
         });
+
+        if (getAutoScrollToAnnotation()) {
+          scrollToFirstAnnotatedLine(editor, lineData);
+        }
 
         vscode.window.showInformationMessage(
           `Profile loaded! ${lineData.length} lines annotated using "${preset.name}"`,

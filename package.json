@@ -196,6 +196,11 @@
           "default": true,
           "description": "Automatically fetch profiling data when opening a file, using the last query configuration"
         },
+        "polarSignals.autoScrollToAnnotation": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scroll to the first annotated line after fetching profiling data"
+        },
         "polarSignals.projectId": {
           "type": "string",
           "description": "Polar Signals project ID (required for cloud mode with OAuth)"

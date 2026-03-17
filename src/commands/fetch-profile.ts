@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import {getConfig, getBrandNameShort} from '../config/settings';
+import {getConfig, getBrandNameShort, getAutoScrollToAnnotation} from '../config/settings';
 import {ProfilerClient} from '../api/profiler-client';
 import {
   parseSourceArrow,
@@ -12,6 +12,7 @@ import {getAnnotations} from '../annotations/annotation-manager';
 import {QueryConfigurator} from '../ui/query-configurator';
 import {sessionStore} from '../state/session-store';
 import {getStatusBar} from '../ui/status-bar';
+import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
 
 export async function fetchProfileCommand(context: vscode.ExtensionContext): Promise<void> {
   try {
@@ -67,7 +68,6 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
 
         progress.report({message: 'Fetching line-level profiling data...'});
         const sourceResult = await client.querySourceReport(query, queryConfig.timeRange, {
-          buildId: '',
           filename: relativeFilePath,
         });
 
@@ -129,7 +129,7 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
           total: sourceResult.total,
           filtered: sourceResult.filtered,
           queryConfig,
-          sourceFile: {filename: selectedFilename, buildId: ''},
+          sourceFile: {filename: selectedFilename},
           timestamp: Date.now(),
         });
 
@@ -156,6 +156,10 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
           typeof queryConfig.timeRange === 'string'
             ? queryConfig.timeRange
             : `${Math.round((queryConfig.timeRange.to - queryConfig.timeRange.from) / 60000)}m`;
+
+        if (getAutoScrollToAnnotation()) {
+          scrollToFirstAnnotatedLine(editor, lineData);
+        }
 
         vscode.window.showInformationMessage(
           `Profile loaded! ${lineData.length} lines annotated. Query: ${queryConfig.profileType

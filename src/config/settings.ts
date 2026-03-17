@@ -133,6 +133,11 @@ export function getAutoFetchOnFileOpen(): boolean {
   return config.get<boolean>('autoFetchOnFileOpen') ?? true;
 }
 
+export function getAutoScrollToAnnotation(): boolean {
+  const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+  return config.get<boolean>('autoScrollToAnnotation') ?? false;
+}
+
 export function getProjectId(): string | null {
   const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
   return config.get<string>('projectId') ?? null;

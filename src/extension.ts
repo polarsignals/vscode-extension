@@ -44,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   repoMappingStore.initialize(context);
 
-  const uriHandler = new PolarSignalsUriHandler(context);
+  const uriHandler = new PolarSignalsUriHandler();
   context.subscriptions.push(vscode.window.registerUriHandler(uriHandler));
 
   const withSetupCheck = (fn: (context: vscode.ExtensionContext) => Promise<void>) => async () => {

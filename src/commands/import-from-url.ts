@@ -25,7 +25,6 @@ interface ParsedPolarSignalsUrl {
   to?: number;
   profileFilters: ProfileFilter[];
   sourceFilename?: string;
-  sourceBuildId?: string;
 }
 
 /**
@@ -117,7 +116,6 @@ export async function importFromUrlCommand(context: vscode.ExtensionContext): Pr
           query,
           timeRange,
           {
-            buildId: parsed.sourceBuildId ?? '',
             filename: filenameHint,
           },
           protoFilters,
@@ -229,7 +227,6 @@ export async function importFromUrlCommand(context: vscode.ExtensionContext): Pr
           queryConfig,
           sourceFile: {
             filename: selectedFilename,
-            buildId: parsed.sourceBuildId ?? '',
           },
           timestamp: Date.now(),
         });
@@ -303,11 +300,6 @@ function parsePolarSignalsUrl(urlString: string): ParsedPolarSignalsUrl {
   const sourceFilename = params.get('source_filename') ?? params.get('filename');
   if (sourceFilename) {
     result.sourceFilename = sourceFilename;
-  }
-
-  const sourceBuildId = params.get('source_build_id') ?? params.get('build_id');
-  if (sourceBuildId) {
-    result.sourceBuildId = sourceBuildId;
   }
 
   return result;
