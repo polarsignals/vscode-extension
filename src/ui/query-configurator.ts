@@ -221,7 +221,7 @@ export class QueryConfigurator {
     const matchers: Record<string, string> = {};
 
     try {
-      const labels = await this.deps.getLabels(profileType, timeRange);
+      const labels = (await this.deps.getLabels(profileType, timeRange)).sort();
 
       if (labels.length === 0) {
         return matchers;
@@ -242,19 +242,26 @@ export class QueryConfigurator {
         return matchers;
       }
 
-      const selectedLabels = await vscode.window.showQuickPick(labels, {
-        placeHolder: 'Select labels to filter by (use arrow keys and Space to select multiple)',
-        canPickMany: true,
-        title: `${getBrandNameShort()}: Select Labels to Filter`,
-      });
+      let selectedLabels: string[] | undefined;
+      while (true) {
+        selectedLabels = await vscode.window.showQuickPick(labels, {
+          placeHolder: 'Select at least one label (use arrow keys and Space to select, then Enter)',
+          canPickMany: true,
+          title: `${getBrandNameShort()}: Select Labels to Filter`,
+        });
 
-      if (!selectedLabels || selectedLabels.length === 0) {
-        return matchers;
+        if (!selectedLabels) {
+          return null;
+        }
+
+        if (selectedLabels.length > 0) {
+          break;
+        }
       }
 
       for (const label of selectedLabels) {
         try {
-          const values = await this.deps.getValues(profileType, label, timeRange);
+          const values = (await this.deps.getValues(profileType, label, timeRange)).sort();
 
           if (values.length === 0) {
             continue;
@@ -270,9 +277,10 @@ export class QueryConfigurator {
             title: `${getBrandNameShort()}: Select Value for ${label}`,
           });
 
-          if (selectedValue) {
-            matchers[label] = selectedValue;
+          if (!selectedValue) {
+            return null;
           }
+          matchers[label] = selectedValue;
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           vscode.window.showWarningMessage(

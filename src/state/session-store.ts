@@ -10,7 +10,6 @@ export interface CachedProfile {
   queryConfig: QueryConfig;
   sourceFile: {
     filename: string;
-    buildId: string;
   };
   timestamp: number;
 }

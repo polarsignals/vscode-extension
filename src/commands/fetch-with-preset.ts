@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import {getPresetById, type QueryPreset} from '../presets/preset-definitions';
-import {getConfig, getBrandNameShort} from '../config/settings';
+import {getConfig, getBrandNameShort, getAutoScrollToAnnotation} from '../config/settings';
 import {ProfilerClient} from '../api/profiler-client';
 import {
   parseSourceArrow,
@@ -12,6 +12,7 @@ import {
 import {getAnnotations} from '../annotations/annotation-manager';
 import {sessionStore} from '../state/session-store';
 import {getStatusBar} from '../ui/status-bar';
+import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
 
 /**
  * Fetch profiling data using a specific preset ID without showing the picker.
@@ -98,7 +99,6 @@ async function fetchWithPreset(
 
       progress.report({message: 'Fetching line-level profiling data...'});
       const sourceResult = await client.querySourceReport(query, preset.timeRange, {
-        buildId: '',
         filename: relativeFilePath,
       });
 
@@ -162,7 +162,7 @@ async function fetchWithPreset(
         total: sourceResult.total,
         filtered: sourceResult.filtered,
         queryConfig,
-        sourceFile: {filename: selectedFilename, buildId: ''},
+        sourceFile: {filename: selectedFilename},
         timestamp: Date.now(),
       });
 
@@ -177,6 +177,10 @@ async function fetchWithPreset(
         timeRange: preset.timeRange,
         labelMatchers: preset.labelMatchers,
       });
+
+      if (getAutoScrollToAnnotation()) {
+        scrollToFirstAnnotatedLine(editor, lineData);
+      }
 
       vscode.window.showInformationMessage(
         `Profile loaded! ${lineData.length} lines annotated using "${preset.name}"`,

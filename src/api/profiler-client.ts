@@ -63,48 +63,6 @@ export class ProfilerClient {
     return headers;
   }
 
-  async queryProfile(
-    query: string,
-    timeRange: TimeRange = this.config.defaultTimeRange,
-  ): Promise<Uint8Array> {
-    const {start, end} = this.parseTimeRange(timeRange);
-
-    console.log(`[${getBrandNameShort()}] Executing query: ${query}`);
-    console.log(
-      `[${getBrandNameShort()}] Time range: ${start.toISOString()} to ${end.toISOString()}`,
-    );
-
-    const request: QueryRequest = {
-      mode: QueryRequest_Mode.MERGE,
-      reportType: QueryRequest_ReportType.TABLE_ARROW,
-      options: {
-        oneofKind: 'merge',
-        merge: {
-          query,
-          start: this.dateToTimestamp(start),
-          end: this.dateToTimestamp(end),
-        },
-      },
-      filter: [],
-    };
-
-    const response = await this.client.query(request, {
-      meta: this.getAuthMeta(),
-    });
-
-    if (response.response.report.oneofKind !== 'tableArrow') {
-      throw new Error('No Arrow table data in response');
-    }
-
-    console.log(
-      `[${getBrandNameShort()}] Response size: ${
-        response.response.report.tableArrow.record.byteLength
-      } bytes`,
-    );
-
-    return alignedUint8Array(response.response.report.tableArrow.record);
-  }
-
   private parseTimeRange(timeRange: TimeRange): {start: Date; end: Date} {
     if (typeof timeRange === 'object' && 'from' in timeRange && 'to' in timeRange) {
       return {
@@ -279,17 +237,13 @@ export class ProfilerClient {
   async querySourceReport(
     query: string,
     timeRange: TimeRange,
-    sourceRef: {buildId: string; filename: string},
+    sourceRef: {filename: string},
     filters: Filter[] = [],
   ): Promise<SourceQueryResult> {
     const {start, end} = this.parseTimeRange(timeRange);
 
     console.log(`[${getBrandNameShort()}] Executing SOURCE query: ${query}`);
-    console.log(
-      `[${getBrandNameShort()}] Source reference: buildId=${sourceRef.buildId}, filename=${
-        sourceRef.filename
-      }`,
-    );
+    console.log(`[${getBrandNameShort()}] Source reference: filename=${sourceRef.filename}`);
 
     const request: QueryRequest = {
       mode: QueryRequest_Mode.MERGE,
@@ -303,7 +257,7 @@ export class ProfilerClient {
         },
       },
       sourceReference: {
-        buildId: sourceRef.buildId,
+        buildId: '',
         filename: sourceRef.filename,
         sourceOnly: false,
       },

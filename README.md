@@ -48,14 +48,17 @@ On first use, the extension will prompt you to choose a mode:
 
 The extension supports the following settings (prefix: `polarSignals.*`):
 
-| Setting                         | Description                        | Default                                           |
-| ------------------------------- | ---------------------------------- | ------------------------------------------------- |
-| `polarSignals.mode`             | Connection mode (`cloud` or `oss`) | _(set during setup)_                              |
-| `polarSignals.cloudUrl`         | Polar Signals Cloud API URL        | `https://api.polarsignals.com`                    |
-| `polarSignals.selfHostedUrl`    | Self-hosted Parca URL              | `http://localhost:7070`                           |
-| `polarSignals.defaultTimeRange` | Default time range for queries     | `1h`                                              |
-| `polarSignals.profileType`      | Default profile type               | `parca_agent:samples:count:cpu:nanoseconds:delta` |
-| `polarSignals.presets`          | Custom query presets               | `[]`                                              |
+| Setting                                  | Description                                                              | Default                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------- |
+| `polarSignals.mode`                      | Connection mode (`cloud` or `oss`)                                       | _(set during setup)_                              |
+| `polarSignals.cloudUrl`                  | Polar Signals Cloud API URL                                              | `https://api.polarsignals.com`                    |
+| `polarSignals.selfHostedUrl`             | Self-hosted Parca URL                                                    | `http://localhost:7070`                           |
+| `polarSignals.defaultTimeRange`          | Default time range for queries                                           | `1h`                                              |
+| `polarSignals.profileType`               | Default profile type                                                     | `parca_agent:samples:count:cpu:nanoseconds:delta` |
+| `polarSignals.presets`                   | Custom query presets                                                     | `[]`                                              |
+| `polarSignals.autoFetchOnFileOpen`       | Automatically fetch profiling data when opening a file                   | `true`                                            |
+| `polarSignals.autoScrollToAnnotation`    | Automatically scroll to the first annotated line after fetching profiles | `false`                                            |
+| `polarSignals.autoScanOnMiss`            | Automatically scan for git repositories when a deep link file isn't found | `true`                                            |
 
 ### Authentication (Cloud Mode)
 
