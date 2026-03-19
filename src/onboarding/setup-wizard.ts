@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import {type ProfilerMode, setMode, isFirstUse, normalizeUrl, getApiUrl} from '../config/settings';
 import {PolarSignalsAuthProvider, getAuthProvider} from '../auth/oauth-provider';
 import {ProfilerClient} from '../api/profiler-client';
+import {refreshMcpOnboarding} from '../mcp/onboarding';
 
 const CONFIG_SECTION = 'polarSignals';
 
@@ -44,13 +45,13 @@ export async function showSetupWizard(
     if (!authenticated) {
       return null;
     }
-    showSuccessMessage('cloud');
+    await showSuccessMessage(_context, 'cloud');
   } else {
     const urlSet = await promptForSelfHostedUrl();
     if (!urlSet) {
       return null;
     }
-    showSuccessMessage('oss');
+    await showSuccessMessage(_context, 'oss');
   }
 
   return selected.mode;
@@ -192,16 +193,26 @@ async function promptForSelfHostedUrl(): Promise<boolean> {
   return true;
 }
 
-function showSuccessMessage(mode: 'cloud' | 'oss'): void {
+async function showSuccessMessage(
+  context: vscode.ExtensionContext,
+  mode: 'cloud' | 'oss',
+): Promise<void> {
   const message =
     mode === 'cloud'
       ? 'Polar Signals Cloud configured! Click to fetch your first profile.'
       : 'Self-hosted Parca configured! Click to fetch your first profile.';
-  vscode.window.showInformationMessage(message, 'Fetch On-CPU (15min)').then(selection => {
-    if (selection === 'Fetch On-CPU (15min)') {
-      vscode.commands.executeCommand('polarSignals.fetchWithPreset', 'cpu-15m');
-    }
-  });
+  const selection = await vscode.window.showInformationMessage(message, 'Fetch On-CPU (15min)');
+  if (selection === 'Fetch On-CPU (15min)') {
+    await vscode.commands.executeCommand('polarSignals.fetchWithPreset', 'cpu-15m');
+  }
+
+  if (mode === 'cloud') {
+    await refreshMcpOnboarding(context, {
+      interactive: false,
+      notify: true,
+      reason: 'setup',
+    });
+  }
 }
 
 export async function checkAndRunSetup(context: vscode.ExtensionContext): Promise<boolean> {

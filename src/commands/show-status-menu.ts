@@ -43,11 +43,18 @@ export async function showStatusMenuCommand(_context: vscode.ExtensionContext): 
   }
 
   if (mode !== 'oss') {
-    items.push({
-      label: '$(link-external) Import from URL',
-      description: 'Import query configuration from Polar Signals Cloud URL',
-      action: 'import',
-    });
+    items.push(
+      {
+        label: '$(link-external) Import from URL',
+        description: 'Import query configuration from Polar Signals Cloud URL',
+        action: 'import',
+      },
+      {
+        label: '$(plug) Set Up MCP',
+        description: 'Use Polar Signals with AI tools in this editor or another client',
+        action: 'mcp-options',
+      },
+    );
   }
 
   items.push(
@@ -87,6 +94,9 @@ export async function showStatusMenuCommand(_context: vscode.ExtensionContext): 
       break;
     case 'import':
       await vscode.commands.executeCommand('polarSignals.importFromUrl');
+      break;
+    case 'mcp-options':
+      await vscode.commands.executeCommand('polarSignals.showMcpOptions');
       break;
     case 'setup':
       await vscode.commands.executeCommand('polarSignals.setupMode');

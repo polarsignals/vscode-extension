@@ -28,6 +28,7 @@ import {
   getAuthProvider,
   PolarSignalsAuthProvider,
 } from './auth/oauth-provider';
+import {refreshMcpOnboarding, setupMcpCommand, showMcpOptions} from './mcp/onboarding';
 
 export async function activate(context: vscode.ExtensionContext) {
   setCompressionCodec(CompressionType.LZ4_FRAME, {
@@ -122,6 +123,11 @@ export async function activate(context: vscode.ExtensionContext) {
       const authProvider = getAuthProvider();
       if (authProvider) {
         await authProvider.removeSession(session.id);
+        await refreshMcpOnboarding(context, {
+          interactive: false,
+          notify: false,
+          reason: 'config',
+        });
         vscode.window.showInformationMessage('Signed out of Polar Signals');
       }
     }
@@ -148,6 +154,17 @@ export async function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  const setUpMcp = vscode.commands.registerCommand('polarSignals.setUpMcp', async () => {
+    await setupMcpCommand(context);
+  });
+
+  const showMcpOptionsCmd = vscode.commands.registerCommand(
+    'polarSignals.showMcpOptions',
+    async () => {
+      await showMcpOptions(context);
+    },
+  );
+
   const copyLineForAICmd = vscode.commands.registerCommand(
     'polarSignals.copyLineForAI',
     async (args: {line: number}) => {
@@ -165,6 +182,17 @@ export async function activate(context: vscode.ExtensionContext) {
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(e => {
     if (e.affectsConfiguration('polarSignals')) {
       invalidateConfigCache();
+    }
+    if (
+      e.affectsConfiguration('polarSignals.mode') ||
+      e.affectsConfiguration('polarSignals.mcpOnboardingMode') ||
+      e.affectsConfiguration('polarSignals.cloudUrl')
+    ) {
+      void refreshMcpOnboarding(context, {
+        interactive: false,
+        notify: false,
+        reason: 'config',
+      });
     }
   });
 
@@ -247,12 +275,20 @@ export async function activate(context: vscode.ExtensionContext) {
     signOut,
     switchProject,
     manageRepoMappings,
+    setUpMcp,
+    showMcpOptionsCmd,
     copyLineForAICmd,
     copyFileForAICmd,
     configChangeListener,
     editorChangeListener,
     autoFetchCleanup,
   );
+
+  void refreshMcpOnboarding(context, {
+    interactive: false,
+    notify: true,
+    reason: 'activation',
+  });
 }
 
 export function deactivate() {
