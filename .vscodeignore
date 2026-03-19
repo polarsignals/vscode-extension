@@ -47,3 +47,5 @@ pnpm-workspace.yaml
 
 # Build artifacts
 *.vsix
+
+.env

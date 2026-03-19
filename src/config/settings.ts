@@ -20,6 +20,7 @@ let cachedConfig: PolarSignalsConfig | null = null;
 let cachedContext: vscode.ExtensionContext | null = null;
 
 export type ProfilerMode = 'cloud' | 'oss';
+export type McpOnboardingMode = 'auto' | 'guided' | 'off';
 
 export interface PolarSignalsConfig {
   mode: ProfilerMode;
@@ -141,6 +142,11 @@ export function getAutoScrollToAnnotation(): boolean {
 export function getProjectId(): string | null {
   const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
   return config.get<string>('projectId') ?? null;
+}
+
+export function getMcpOnboardingMode(): McpOnboardingMode {
+  const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+  return config.get<McpOnboardingMode>('mcpOnboardingMode') ?? 'auto';
 }
 
 export async function promptForProjectId(): Promise<string | undefined> {

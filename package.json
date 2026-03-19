@@ -36,6 +36,12 @@
         "label": "Polar Signals"
       }
     ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "polarsignals.mcp",
+        "label": "Polar Signals"
+      }
+    ],
     "commands": [
       {
         "command": "polarSignals.fetchProfile",
@@ -88,12 +94,24 @@
       {
         "command": "polarSignals.copyFileForAI",
         "title": "Polar Signals: Copy File Summary for AI"
+      },
+      {
+        "command": "polarSignals.setUpMcp",
+        "title": "Polar Signals: Set Up MCP"
+      },
+      {
+        "command": "polarSignals.showMcpOptions",
+        "title": "Polar Signals: Use Polar Signals with AI Tools"
       }
     ],
     "menus": {
       "commandPalette": [
         {
           "command": "polarSignals.fetchWithPreset",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.showMcpOptions",
           "when": "false"
         }
       ]
@@ -204,6 +222,21 @@
         "polarSignals.projectId": {
           "type": "string",
           "description": "Polar Signals project ID (required for cloud mode with OAuth)"
+        },
+        "polarSignals.mcpOnboardingMode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "guided",
+            "off"
+          ],
+          "default": "auto",
+          "enumDescriptions": [
+            "Automatically set up Polar Signals MCP Server when this editor supports it",
+            "Show setup help without automatically registering MCP",
+            "Disable Polar Signals MCP Server onboarding"
+          ],
+          "description": "Controls how Polar Signals MCP Server is set up in this editor"
         }
       }
     }
