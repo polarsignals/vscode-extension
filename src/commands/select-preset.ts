@@ -156,7 +156,17 @@ export async function selectPresetCommand(context: vscode.ExtensionContext): Pro
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    vscode.window.showErrorMessage(`Failed to fetch profile: ${errorMessage}`);
+    if (errorMessage.includes('not configured') || errorMessage.includes('Please sign in')) {
+      const choice = await vscode.window.showErrorMessage(
+        `Failed to fetch profile: ${errorMessage}`,
+        'Set Up',
+      );
+      if (choice === 'Set Up') {
+        await vscode.commands.executeCommand('polarSignals.setupMode');
+      }
+    } else {
+      vscode.window.showErrorMessage(`Failed to fetch profile: ${errorMessage}`);
+    }
     console.error('Error fetching profile with preset:', error);
   }
 }

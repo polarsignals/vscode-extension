@@ -39,6 +39,7 @@ CLAUDE.md
 # Scripts and tools
 PLAN.MD
 .claude/
+.context/**
 .github/**
 .husky/**
 scripts/**

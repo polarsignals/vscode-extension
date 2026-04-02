@@ -171,18 +171,28 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const config = await getConfig(context).catch(() => null);
-    if (
-      config?.mode === 'oss' &&
-      (errorMessage.includes('fetch') ||
-        errorMessage.includes('network') ||
-        errorMessage.includes('ECONNREFUSED'))
-    ) {
-      vscode.window.showErrorMessage(
-        `Failed to connect to Parca at ${config.apiUrl}. Check if the server is running and the URL is correct in settings.`,
+    if (errorMessage.includes('not configured') || errorMessage.includes('Please sign in')) {
+      const choice = await vscode.window.showErrorMessage(
+        `Failed to fetch profile: ${errorMessage}`,
+        'Set Up',
       );
+      if (choice === 'Set Up') {
+        await vscode.commands.executeCommand('polarSignals.setupMode');
+      }
     } else {
-      vscode.window.showErrorMessage(`Failed to fetch profile: ${errorMessage}`);
+      const config = await getConfig(context).catch(() => null);
+      if (
+        config?.mode === 'oss' &&
+        (errorMessage.includes('fetch') ||
+          errorMessage.includes('network') ||
+          errorMessage.includes('ECONNREFUSED'))
+      ) {
+        vscode.window.showErrorMessage(
+          `Failed to connect to Parca at ${config.apiUrl}. Check if the server is running and the URL is correct in settings.`,
+        );
+      } else {
+        vscode.window.showErrorMessage(`Failed to fetch profile: ${errorMessage}`);
+      }
     }
     console.error('Error fetching profile:', error);
   }

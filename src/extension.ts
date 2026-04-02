@@ -23,11 +23,7 @@ import {repoMappingStore} from './repository/repo-mapping-store';
 import {manageRepoMappingsCommand} from './commands/manage-repo-mappings';
 import {sessionStore, isSameQueryConfig} from './state/session-store';
 import {silentFetchProfile} from './commands/silent-fetch';
-import {
-  registerAuthProvider,
-  getAuthProvider,
-  PolarSignalsAuthProvider,
-} from './auth/oauth-provider';
+import {registerAuthProvider, getAuthProvider} from './auth/oauth-provider';
 import {refreshMcpOnboarding, setupMcpCommand, showMcpOptions} from './mcp/onboarding';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -104,11 +100,10 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   const signOut = vscode.commands.registerCommand('polarSignals.signOut', async () => {
-    const session = await vscode.authentication.getSession(PolarSignalsAuthProvider.id, [], {
-      createIfNone: false,
-    });
+    const authProvider = getAuthProvider();
+    const sessions = authProvider ? await authProvider.getSessions() : [];
 
-    if (!session) {
+    if (sessions.length === 0) {
       vscode.window.showInformationMessage('You are not signed in to Polar Signals');
       return;
     }
@@ -119,17 +114,19 @@ export async function activate(context: vscode.ExtensionContext) {
       'Sign Out',
     );
 
-    if (choice === 'Sign Out') {
-      const authProvider = getAuthProvider();
-      if (authProvider) {
+    if (choice === 'Sign Out' && authProvider) {
+      for (const session of sessions) {
         await authProvider.removeSession(session.id);
-        await refreshMcpOnboarding(context, {
-          interactive: false,
-          notify: false,
-          reason: 'config',
-        });
-        vscode.window.showInformationMessage('Signed out of Polar Signals');
       }
+      const config = vscode.workspace.getConfiguration('polarSignals');
+      await config.update('mode', undefined, vscode.ConfigurationTarget.Global);
+      await config.update('projectId', undefined, vscode.ConfigurationTarget.Global);
+      await refreshMcpOnboarding(context, {
+        interactive: false,
+        notify: false,
+        reason: 'config',
+      });
+      vscode.window.showInformationMessage('Signed out of Polar Signals');
     }
   });
 

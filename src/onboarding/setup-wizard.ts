@@ -220,6 +220,6 @@ export async function checkAndRunSetup(context: vscode.ExtensionContext): Promis
     return true;
   }
 
-  const mode = await showSetupWizard(context);
-  return mode !== null;
+  await showSetupWizard(context);
+  return false;
 }
