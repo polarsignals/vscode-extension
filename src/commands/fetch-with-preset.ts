@@ -23,22 +23,22 @@ export async function fetchWithPresetCommand(
   context: vscode.ExtensionContext,
   presetId: string = 'cpu-15m',
 ): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage('No active file open. Please open a source file first.');
+    return;
+  }
+
+  const preset = getPresetById(presetId);
+  if (!preset) {
+    vscode.window.showWarningMessage(
+      `Preset "${presetId}" not found, opening query configurator...`,
+    );
+    await vscode.commands.executeCommand('polarSignals.fetchProfile');
+    return;
+  }
+
   try {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      vscode.window.showErrorMessage('No active file open. Please open a source file first.');
-      return;
-    }
-
-    const preset = getPresetById(presetId);
-    if (!preset) {
-      vscode.window.showWarningMessage(
-        `Preset "${presetId}" not found, opening query configurator...`,
-      );
-      await vscode.commands.executeCommand('polarSignals.fetchProfile');
-      return;
-    }
-
     await fetchWithPreset(context, editor, preset);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -60,9 +60,10 @@ export async function fetchWithPresetCommand(
 }
 
 /**
- * Internal function to fetch profile using a preset.
+ * Fetch profile using a preset against the given editor. Shared by the
+ * preset-picker command and the post-onboarding quick-start flow.
  */
-async function fetchWithPreset(
+export async function fetchWithPreset(
   context: vscode.ExtensionContext,
   editor: vscode.TextEditor,
   preset: QueryPreset,
@@ -95,107 +96,128 @@ async function fetchWithPreset(
       cancellable: false,
     },
     async progress => {
-      const query = client.buildQueryForFile(fileName);
-      console.log(`[${brandName}] Query: ${query}`);
+      try {
+        const query = client.buildQueryForFile(fileName);
+        console.log(`[${brandName}] Query: ${query}`);
 
-      progress.report({message: 'Fetching line-level profiling data...'});
-      let sourceResult = await client.querySourceReport(query, preset.timeRange, {
-        filename: relativeFilePath,
-      });
+        progress.report({message: 'Fetching line-level profiling data...'});
+        let sourceResult = await client.querySourceReport(query, preset.timeRange, {
+          filename: relativeFilePath,
+        });
 
-      progress.report({message: 'Processing profiling data...'});
-      let allLineData = parseSourceArrow(sourceResult.record);
-
-      if (allLineData.length === 0) {
-        const picked = await pickCandidateAndRequery(sourceResult, fileName, filename =>
-          client.querySourceReport(query, preset.timeRange, {filename}),
-        );
-        if (picked) {
-          sourceResult = picked;
-          allLineData = parseSourceArrow(sourceResult.record);
-        }
+        progress.report({message: 'Processing profiling data...'});
+        let allLineData = parseSourceArrow(sourceResult.record);
 
         if (allLineData.length === 0) {
-          getStatusBar().showNoProfile();
-          console.log(`[${brandName}] No profiling data found for ${fileName}`);
-          return;
-        }
-      }
+          const picked = await pickCandidateAndRequery(sourceResult, fileName, filename =>
+            client.fetchSourceExact(query, preset.timeRange, filename),
+          );
+          if (picked) {
+            sourceResult = picked;
+            allLineData = parseSourceArrow(sourceResult.record);
+          }
 
-      const uniqueFilenames = getUniqueFilenames(allLineData);
-      let lineData: SourceLineData[];
-      let selectedFilename: string;
-
-      if (uniqueFilenames.length <= 1) {
-        lineData = allLineData;
-        selectedFilename = uniqueFilenames[0] || fileName;
-      } else {
-        const matched = uniqueFilenames.find(
-          f => currentFilePath.endsWith(f) || f.endsWith(relativeFilePath) || f.endsWith(fileName),
-        );
-
-        if (matched) {
-          lineData = filterByFilename(allLineData, matched);
-          selectedFilename = matched;
-          console.log(`[${brandName}] Auto-matched filename: ${matched}`);
-        } else {
-          const selected = await vscode.window.showQuickPick(uniqueFilenames, {
-            placeHolder: 'Multiple source files found in profile - select one',
-            title: `${brandName}: Select Source File`,
-          });
-          if (!selected) {
+          if (allLineData.length === 0) {
+            getStatusBar().showNoProfile();
+            console.log(`[${brandName}] No profiling data found for ${fileName}`);
+            vscode.window.showWarningMessage(
+              'No profiling data found for this file in the selected time range',
+            );
             return;
           }
-          lineData = filterByFilename(allLineData, selected);
-          selectedFilename = selected;
         }
+
+        const uniqueFilenames = getUniqueFilenames(allLineData);
+        let lineData: SourceLineData[];
+        let selectedFilename: string;
+
+        if (uniqueFilenames.length <= 1) {
+          lineData = allLineData;
+          selectedFilename = uniqueFilenames[0] || fileName;
+        } else {
+          const matched = uniqueFilenames.find(
+            f =>
+              currentFilePath.endsWith(f) || f.endsWith(relativeFilePath) || f.endsWith(fileName),
+          );
+
+          if (matched) {
+            lineData = filterByFilename(allLineData, matched);
+            selectedFilename = matched;
+            console.log(`[${brandName}] Auto-matched filename: ${matched}`);
+          } else {
+            const selected = await vscode.window.showQuickPick(uniqueFilenames, {
+              placeHolder: 'Multiple source files found in profile - select one',
+              title: `${brandName}: Select Source File`,
+            });
+            if (!selected) {
+              return;
+            }
+            lineData = filterByFilename(allLineData, selected);
+            selectedFilename = selected;
+          }
+        }
+
+        progress.report({message: 'Applying annotations...'});
+
+        getAnnotations().applyAnnotations(
+          editor,
+          lineData,
+          sourceResult.unit,
+          sourceResult.total,
+          sourceResult.filtered,
+        );
+
+        const queryConfig = {
+          profileType: preset.profileType,
+          timeRange: preset.timeRange,
+          labelMatchers: preset.labelMatchers ?? {},
+        };
+
+        sessionStore.store(currentFilePath, {
+          lineData,
+          unit: sourceResult.unit,
+          total: sourceResult.total,
+          filtered: sourceResult.filtered,
+          queryConfig,
+          sourceFile: {filename: selectedFilename},
+          timestamp: Date.now(),
+        });
+
+        sessionStore.setLastQueryConfig({
+          profileType: preset.profileType,
+          timeRange: preset.timeRange,
+          labelMatchers: preset.labelMatchers ?? {},
+        });
+
+        getStatusBar().showActiveProfile({
+          profileType: preset.profileType,
+          timeRange: preset.timeRange,
+          labelMatchers: preset.labelMatchers,
+        });
+
+        if (getAutoScrollToAnnotation()) {
+          scrollToFirstAnnotatedLine(editor, lineData);
+        }
+
+        vscode.window.showInformationMessage(
+          `Profile loaded! ${lineData.length} lines annotated using "${preset.name}"`,
+        );
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (
+          config.mode === 'oss' &&
+          (errorMessage.includes('fetch') ||
+            errorMessage.includes('network') ||
+            errorMessage.includes('ECONNREFUSED'))
+        ) {
+          vscode.window.showErrorMessage(
+            `Failed to connect to Parca at ${config.apiUrl}. Check if the server is running and the URL is correct in settings.`,
+          );
+        } else {
+          vscode.window.showErrorMessage(`Failed to fetch profile: ${errorMessage}`);
+        }
+        console.error('Error fetching profile with preset:', error);
       }
-
-      progress.report({message: 'Applying annotations...'});
-
-      getAnnotations().applyAnnotations(
-        editor,
-        lineData,
-        sourceResult.unit,
-        sourceResult.total,
-        sourceResult.filtered,
-      );
-
-      const queryConfig = {
-        profileType: preset.profileType,
-        timeRange: preset.timeRange,
-        labelMatchers: preset.labelMatchers ?? {},
-      };
-
-      sessionStore.store(currentFilePath, {
-        lineData,
-        unit: sourceResult.unit,
-        total: sourceResult.total,
-        filtered: sourceResult.filtered,
-        queryConfig,
-        sourceFile: {filename: selectedFilename},
-        timestamp: Date.now(),
-      });
-
-      sessionStore.setLastQueryConfig({
-        profileType: preset.profileType,
-        timeRange: preset.timeRange,
-        labelMatchers: preset.labelMatchers ?? {},
-      });
-
-      getStatusBar().showActiveProfile({
-        profileType: preset.profileType,
-        timeRange: preset.timeRange,
-        labelMatchers: preset.labelMatchers,
-      });
-
-      if (getAutoScrollToAnnotation()) {
-        scrollToFirstAnnotatedLine(editor, lineData);
-      }
-
-      vscode.window.showInformationMessage(
-        `Profile loaded! ${lineData.length} lines annotated using "${preset.name}"`,
-      );
     },
   );
 }

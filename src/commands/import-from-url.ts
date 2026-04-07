@@ -127,7 +127,7 @@ export async function importFromUrlCommand(context: vscode.ExtensionContext): Pr
 
         if (allLineData.length === 0) {
           const picked = await pickCandidateAndRequery(sourceResult, currentFileName, filename =>
-            client.querySourceReport(query, timeRange, {filename}, protoFilters),
+            client.fetchSourceExact(query, timeRange, filename, protoFilters),
           );
           if (picked) {
             sourceResult = picked;

@@ -13,7 +13,7 @@ import {
 import {type Timestamp} from '@parca/client/dist/google/protobuf/timestamp';
 import {ProjectServiceClient} from '../generated/polarsignals/project/v1alpha1/project.client';
 import type {Organization, Project} from '../generated/polarsignals/project/v1alpha1/project';
-import {parseSourceArrow} from '../converters/source-arrow-converter';
+import {parseSourceArrow, getUniqueFilenames} from '../converters/source-arrow-converter';
 
 export interface SourceQueryResult {
   record: Uint8Array;
@@ -21,8 +21,6 @@ export interface SourceQueryResult {
   unit: string;
   total: bigint;
   filtered: bigint;
-  // Filenames observed during retries when no unambiguous match was found.
-  // Sorted by cumulative descending. Lets the caller offer a picker.
   candidates?: Array<{filename: string; cumulative: number}>;
 }
 
@@ -282,6 +280,21 @@ export class ProfilerClient {
     return {record, source, unit, total, filtered};
   }
 
+  /**
+   * Fetch SOURCE for a known-exact filename without the suffix-trimming retry
+   * loop. Use this when the filename is already a full indexed path (e.g.
+   * after the user picks one from the candidates list).
+   */
+  async fetchSourceExact(
+    query: string,
+    timeRange: TimeRange,
+    filename: string,
+    filters: Filter[] = [],
+  ): Promise<SourceQueryResult> {
+    const {start, end} = this.parseTimeRange(timeRange);
+    return this.executeSourceQuery(query, start, end, filename, filters);
+  }
+
   async querySourceReport(
     query: string,
     timeRange: TimeRange,
@@ -300,8 +313,7 @@ export class ProfilerClient {
       last = result;
       if (result.record.byteLength > 0) {
         const lines = parseSourceArrow(result.record);
-        const unique = new Set(lines.map(l => l.filename));
-        if (unique.size === 1) return result;
+        if (getUniqueFilenames(lines).length === 1) return result;
         // First multi-match attempt has the widest view of the profile;
         // narrower retries are strict subsets, so snapshot once.
         if (seen.size === 0) {

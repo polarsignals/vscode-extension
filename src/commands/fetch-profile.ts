@@ -77,7 +77,7 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
 
         if (allLineData.length === 0) {
           const picked = await pickCandidateAndRequery(sourceResult, fileName, filename =>
-            client.querySourceReport(query, queryConfig.timeRange, {filename}),
+            client.fetchSourceExact(query, queryConfig.timeRange, filename),
           );
           if (picked) {
             sourceResult = picked;
