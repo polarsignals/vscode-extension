@@ -21,6 +21,9 @@ export interface SourceQueryResult {
   unit: string;
   total: bigint;
   filtered: bigint;
+  // Filenames observed during retries when no unambiguous match was found.
+  // Sorted by cumulative descending. Lets the caller offer a picker.
+  candidates?: Array<{filename: string; cumulative: number}>;
 }
 
 /**
@@ -290,17 +293,32 @@ export class ProfilerClient {
     console.log(`[${getBrandNameShort()}] Executing SOURCE query: ${query}`);
 
     const candidates = buildFilenameCandidates(sourceRef.filename);
+    const seen = new Map<string, number>();
     let last: SourceQueryResult | undefined;
     for (const filename of candidates) {
       const result = await this.executeSourceQuery(query, start, end, filename, filters);
       last = result;
       if (result.record.byteLength > 0) {
-        const unique = new Set(parseSourceArrow(result.record).map(l => l.filename));
+        const lines = parseSourceArrow(result.record);
+        const unique = new Set(lines.map(l => l.filename));
         if (unique.size === 1) return result;
+        // First multi-match attempt has the widest view of the profile;
+        // narrower retries are strict subsets, so snapshot once.
+        if (seen.size === 0) {
+          for (const line of lines) {
+            seen.set(line.filename, (seen.get(line.filename) ?? 0) + line.cumulative);
+          }
+        }
       }
       if (result.total <= 0n) break;
     }
-    return last!;
+    const candidatesOut =
+      seen.size > 0
+        ? [...seen.entries()]
+            .map(([filename, cumulative]) => ({filename, cumulative}))
+            .sort((a, b) => b.cumulative - a.cumulative)
+        : undefined;
+    return {...last!, candidates: candidatesOut};
   }
 
   async getProjects(): Promise<{org: Organization; project: Project}[]> {

@@ -10,6 +10,7 @@ import {
   type SourceLineData,
 } from '../converters/source-arrow-converter';
 import {getAnnotations} from '../annotations/annotation-manager';
+import {pickCandidateAndRequery} from './pick-candidate';
 import {sessionStore} from '../state/session-store';
 import {getStatusBar} from '../ui/status-bar';
 import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
@@ -98,17 +99,27 @@ async function fetchWithPreset(
       console.log(`[${brandName}] Query: ${query}`);
 
       progress.report({message: 'Fetching line-level profiling data...'});
-      const sourceResult = await client.querySourceReport(query, preset.timeRange, {
+      let sourceResult = await client.querySourceReport(query, preset.timeRange, {
         filename: relativeFilePath,
       });
 
       progress.report({message: 'Processing profiling data...'});
-      const allLineData = parseSourceArrow(sourceResult.record);
+      let allLineData = parseSourceArrow(sourceResult.record);
 
       if (allLineData.length === 0) {
-        getStatusBar().showNoProfile();
-        console.log(`[${brandName}] No profiling data found for ${fileName}`);
-        return;
+        const picked = await pickCandidateAndRequery(sourceResult, fileName, filename =>
+          client.querySourceReport(query, preset.timeRange, {filename}),
+        );
+        if (picked) {
+          sourceResult = picked;
+          allLineData = parseSourceArrow(sourceResult.record);
+        }
+
+        if (allLineData.length === 0) {
+          getStatusBar().showNoProfile();
+          console.log(`[${brandName}] No profiling data found for ${fileName}`);
+          return;
+        }
       }
 
       const uniqueFilenames = getUniqueFilenames(allLineData);
