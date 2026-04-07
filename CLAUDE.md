@@ -13,9 +13,15 @@ pnpm run typecheck    # tsc --noEmit
 pnpm run lint         # ESLint on src/
 pnpm run build        # Production build
 pnpm run package      # Build + vsce package
+pnpm test             # Run unit tests (vitest)
+pnpm test:unit        # Run unit tests (vitest)
+pnpm test:e2e         # Run e2e tests (launches VS Code)
 ```
 
-No test suite exists.
+## Tests
+
+- **Unit tests** (`src/test/unit/`): Pure function tests using vitest. No VS Code runtime needed. The `vscode` module is mocked via `src/test/unit/mocks/vscode.ts`.
+- **E2E tests** (`src/test/e2e/`): Integration tests using `@vscode/test-electron` + mocha. Launches a real VS Code instance.
 
 ## Architecture
 
