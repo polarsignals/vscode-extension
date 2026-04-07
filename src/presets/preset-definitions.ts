@@ -139,20 +139,20 @@ export const DEFAULT_PRESETS: QueryPreset[] = [
   },
 ];
 
+export function filterByMode(preset: QueryPreset, currentMode: ProfilerMode | null): boolean {
+  if (!preset.mode || preset.mode === 'both') return true;
+  return preset.mode === currentMode;
+}
+
 export function getAllPresets(): QueryPreset[] {
   const currentMode = getMode();
   const config = vscode.workspace.getConfiguration('polarSignals');
   const userPresets = config.get<QueryPreset[]>('presets') ?? [];
 
-  const filterByMode = (preset: QueryPreset): boolean => {
-    if (!preset.mode || preset.mode === 'both') return true;
-    return preset.mode === currentMode;
-  };
-
   const presetsMap = new Map<string, QueryPreset>();
 
   for (const preset of DEFAULT_PRESETS) {
-    if (filterByMode(preset)) {
+    if (filterByMode(preset, currentMode)) {
       presetsMap.set(preset.id, preset);
     }
   }
@@ -163,7 +163,7 @@ export function getAllPresets(): QueryPreset[] {
       preset.name &&
       preset.profileType &&
       preset.timeRange &&
-      filterByMode(preset)
+      filterByMode(preset, currentMode)
     ) {
       presetsMap.set(preset.id, preset);
     }

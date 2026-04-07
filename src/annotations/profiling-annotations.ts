@@ -44,6 +44,43 @@ const unitFormatters: Record<string, UnitFormat[]> = {
   ],
 };
 
+export function formatValue(
+  value: number,
+  unit: string,
+  tight: boolean = true,
+  digits: number = 1,
+): string {
+  if (value === 0) return '0';
+
+  const format = unitFormatters[unit] ?? unitFormatters.count;
+  const absValue = Math.abs(value);
+
+  let selectedFormat = format[format.length - 1];
+  for (const fmt of format) {
+    if (absValue >= fmt.multiplier) {
+      selectedFormat = fmt;
+      break;
+    }
+  }
+
+  const formatted = (value / selectedFormat.multiplier).toFixed(digits);
+  const cleanFormatted = formatted.replace(/\.?0+$/, '');
+  const space = tight ? '' : ' ';
+  return `${cleanFormatted}${space}${selectedFormat.symbol}`;
+}
+
+export function getHeatLevel(intensity: number): string {
+  if (intensity > 0.7) {
+    return 'hot';
+  } else if (intensity > 0.4) {
+    return 'warm';
+  } else if (intensity > 0.1) {
+    return 'mild';
+  } else {
+    return 'cool';
+  }
+}
+
 export class ProfilingAnnotations {
   private readonly lineDecorationType: vscode.TextEditorDecorationType;
   private readonly blockDecorationTypes = new Map<string, vscode.TextEditorDecorationType>();
@@ -230,23 +267,7 @@ export class ProfilingAnnotations {
   }
 
   private formatValue(value: number, tight: boolean = true, digits: number = 1): string {
-    if (value === 0) return '0';
-
-    const format = unitFormatters[this.unit] ?? unitFormatters.count;
-    const absValue = Math.abs(value);
-
-    let selectedFormat = format[format.length - 1];
-    for (const fmt of format) {
-      if (absValue >= fmt.multiplier) {
-        selectedFormat = fmt;
-        break;
-      }
-    }
-
-    const formatted = (value / selectedFormat.multiplier).toFixed(digits);
-    const cleanFormatted = formatted.replace(/\.?0+$/, '');
-    const space = tight ? '' : ' ';
-    return `${cleanFormatted}${space}${selectedFormat.symbol}`;
+    return formatValue(value, this.unit, tight, digits);
   }
 
   private getHeatColor(intensity: number): string {
@@ -262,15 +283,7 @@ export class ProfilingAnnotations {
   }
 
   private getHeatLevel(intensity: number): string {
-    if (intensity > 0.7) {
-      return 'hot';
-    } else if (intensity > 0.4) {
-      return 'warm';
-    } else if (intensity > 0.1) {
-      return 'mild';
-    } else {
-      return 'cool';
-    }
+    return getHeatLevel(intensity);
   }
 
   private detectFunctionBlocks(
