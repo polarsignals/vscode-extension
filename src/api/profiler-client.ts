@@ -13,6 +13,7 @@ import {
 import {type Timestamp} from '@parca/client/dist/google/protobuf/timestamp';
 import {ProjectServiceClient} from '../generated/polarsignals/project/v1alpha1/project.client';
 import type {Organization, Project} from '../generated/polarsignals/project/v1alpha1/project';
+import {parseSourceArrow, getUniqueFilenames} from '../converters/source-arrow-converter';
 
 export interface SourceQueryResult {
   record: Uint8Array;
@@ -20,6 +21,7 @@ export interface SourceQueryResult {
   unit: string;
   total: bigint;
   filtered: bigint;
+  candidates?: Array<{filename: string; cumulative: number}>;
 }
 
 /**
@@ -234,17 +236,13 @@ export class ProfilerClient {
     }
   }
 
-  async querySourceReport(
+  private async executeSourceQuery(
     query: string,
-    timeRange: TimeRange,
-    sourceRef: {filename: string},
-    filters: Filter[] = [],
+    start: Date,
+    end: Date,
+    filename: string,
+    filters: Filter[],
   ): Promise<SourceQueryResult> {
-    const {start, end} = this.parseTimeRange(timeRange);
-
-    console.log(`[${getBrandNameShort()}] Executing SOURCE query: ${query}`);
-    console.log(`[${getBrandNameShort()}] Source reference: filename=${sourceRef.filename}`);
-
     const request: QueryRequest = {
       mode: QueryRequest_Mode.MERGE,
       reportType: QueryRequest_ReportType.SOURCE,
@@ -258,7 +256,7 @@ export class ProfilerClient {
       },
       sourceReference: {
         buildId: '',
-        filename: sourceRef.filename,
+        filename,
         sourceOnly: false,
       },
       filter: filters,
@@ -284,6 +282,63 @@ export class ProfilerClient {
     return {record, source, unit, total, filtered};
   }
 
+  async fetchSourceExact(
+    query: string,
+    timeRange: TimeRange,
+    filename: string,
+    filters: Filter[] = [],
+  ): Promise<SourceQueryResult> {
+    const {start, end} = this.parseTimeRange(timeRange);
+    return this.executeSourceQuery(query, start, end, filename, filters);
+  }
+
+  async querySourceReport(
+    query: string,
+    timeRange: TimeRange,
+    sourceRef: {filename: string},
+    filters: Filter[] = [],
+  ): Promise<SourceQueryResult> {
+    const {start, end} = this.parseTimeRange(timeRange);
+
+    console.log(`[${getBrandNameShort()}] Executing SOURCE query: ${query}`);
+
+    const candidates = buildFilenameCandidates(sourceRef.filename);
+    const seen = new Map<string, number>();
+    let last: SourceQueryResult | undefined;
+
+    for (const filename of candidates) {
+      console.log(`[${getBrandNameShort()}] Source reference: filename=${filename}`);
+      const result = await this.executeSourceQuery(query, start, end, filename, filters);
+      last = result;
+
+      if (result.record.byteLength > 0) {
+        const lines = parseSourceArrow(result.record);
+        if (getUniqueFilenames(lines).length === 1) {
+          return result;
+        }
+
+        if (seen.size === 0) {
+          for (const line of lines) {
+            seen.set(line.filename, (seen.get(line.filename) ?? 0) + line.cumulative);
+          }
+        }
+      }
+
+      if (result.total <= 0n) {
+        break;
+      }
+    }
+
+    const candidatesOut =
+      seen.size > 0
+        ? [...seen.entries()]
+            .map(([filename, cumulative]) => ({filename, cumulative}))
+            .sort((a, b) => b.cumulative - a.cumulative)
+        : undefined;
+
+    return {...last!, candidates: candidatesOut};
+  }
+
   async getProjects(): Promise<{org: Organization; project: Project}[]> {
     const response = await this.projectClient.getProjects({}, {meta: this.getAuthMeta()});
 
@@ -294,6 +349,23 @@ export class ProfilerClient {
 }
 
 export type {Organization, Project};
+
+function buildFilenameCandidates(filename: string): string[] {
+  const parts = filename.split('/').filter(Boolean);
+  if (parts.length === 0) {
+    return [filename];
+  }
+
+  const full = parts.join('/');
+  const out: string[] = [full];
+  for (let i = parts.length - 1; i >= 1; i--) {
+    const candidate = parts.slice(i).join('/');
+    if (candidate !== full) {
+      out.push(candidate);
+    }
+  }
+  return out;
+}
 
 /**
  * Ensures the buffer is 8-byte aligned for Arrow IPC parsing.

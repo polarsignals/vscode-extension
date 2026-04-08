@@ -119,7 +119,6 @@ export async function activate(context: vscode.ExtensionContext) {
         await authProvider.removeSession(session.id);
       }
       const config = vscode.workspace.getConfiguration('polarSignals');
-      await config.update('mode', undefined, vscode.ConfigurationTarget.Global);
       await config.update('projectId', undefined, vscode.ConfigurationTarget.Global);
       await refreshMcpOnboarding(context, {
         interactive: false,

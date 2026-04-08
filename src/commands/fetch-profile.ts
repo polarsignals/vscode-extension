@@ -9,6 +9,7 @@ import {
   type SourceLineData,
 } from '../converters/source-arrow-converter';
 import {getAnnotations} from '../annotations/annotation-manager';
+import {pickCandidateAndRequery} from './pick-candidate';
 import {QueryConfigurator} from '../ui/query-configurator';
 import {sessionStore} from '../state/session-store';
 import {getStatusBar} from '../ui/status-bar';
@@ -67,20 +68,30 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
         console.log(`[${brandName}] Query: ${query}`);
 
         progress.report({message: 'Fetching line-level profiling data...'});
-        const sourceResult = await client.querySourceReport(query, queryConfig.timeRange, {
+        let sourceResult = await client.querySourceReport(query, queryConfig.timeRange, {
           filename: relativeFilePath,
         });
 
         progress.report({message: 'Processing profiling data...'});
-        const allLineData = parseSourceArrow(sourceResult.record);
+        let allLineData = parseSourceArrow(sourceResult.record);
 
         if (allLineData.length === 0) {
-          getStatusBar().showNoProfile();
-          console.log(`[${brandName}] No profiling data found for ${fileName}`);
-          vscode.window.showWarningMessage(
-            'No profiling data found for this file in the selected time range',
+          const picked = await pickCandidateAndRequery(sourceResult, fileName, filename =>
+            client.fetchSourceExact(query, queryConfig.timeRange, filename),
           );
-          return;
+          if (picked) {
+            sourceResult = picked;
+            allLineData = parseSourceArrow(sourceResult.record);
+          }
+
+          if (allLineData.length === 0) {
+            getStatusBar().showNoProfile();
+            console.log(`[${brandName}] No profiling data found for ${fileName}`);
+            vscode.window.showWarningMessage(
+              'No profiling data found for this file in the selected time range',
+            );
+            return;
+          }
         }
 
         const uniqueFilenames = getUniqueFilenames(allLineData);
