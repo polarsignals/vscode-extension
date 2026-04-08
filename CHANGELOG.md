@@ -1,6 +1,19 @@
 
 # Changelog
 
+## [1.4.0](https://github.com/polarsignals/vscode-extension/compare/v1.3.2...v1.4.0) (2026-04-08)
+
+
+### Features
+
+* add unit and e2e test infrastructure ([7f340bb](https://github.com/polarsignals/vscode-extension/commit/7f340bbe6517ec87ddacb8deac960e58b6cc60d3))
+* pick a candidate file when filename hint is ambiguous ([28da72c](https://github.com/polarsignals/vscode-extension/commit/28da72cd2f1d06d7c24d1b194cb83e8f8212878c))
+
+
+### Bug Fixes
+
+* improve onboarding and sign-out flow for Cursor compatibility ([1d79bf4](https://github.com/polarsignals/vscode-extension/commit/1d79bf41b1f066bb291a5c713fe1a5c2a0f816dc))
+
 ## [1.3.2](https://github.com/polarsignals/vscode-extension/compare/v1.3.1...v1.3.2) (2026-04-07)
 
 
