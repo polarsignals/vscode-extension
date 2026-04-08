@@ -1,6 +1,8 @@
 
 # Changelog
 
+## [1.4.1](https://github.com/polarsignals/vscode-extension/compare/v1.4.0...v1.4.1) (2026-04-08)
+
 ## [1.4.0](https://github.com/polarsignals/vscode-extension/compare/v1.3.2...v1.4.0) (2026-04-08)
 
 
