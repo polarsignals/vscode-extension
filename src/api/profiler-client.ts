@@ -13,7 +13,7 @@ import {
 import {type Timestamp} from '@parca/client/dist/google/protobuf/timestamp';
 import {ProjectServiceClient} from '../generated/polarsignals/project/v1alpha1/project.client';
 import type {Organization, Project} from '../generated/polarsignals/project/v1alpha1/project';
-import {parseSourceArrow} from '../converters/source-arrow-converter';
+import {parseSourceArrow, getUniqueFilenames} from '../converters/source-arrow-converter';
 
 export interface SourceQueryResult {
   record: Uint8Array;
@@ -21,6 +21,7 @@ export interface SourceQueryResult {
   unit: string;
   total: bigint;
   filtered: bigint;
+  candidates?: Array<{filename: string; cumulative: number}>;
 }
 
 /**
@@ -279,6 +280,15 @@ export class ProfilerClient {
     return {record, source, unit, total, filtered};
   }
 
+  async fetchSourceExact(
+    query: string,
+    timeRange: TimeRange,
+    filename: string,
+    filters: Filter[] = [],
+  ): Promise<SourceQueryResult> {
+    const {start, end} = this.parseTimeRange(timeRange);
+    return this.executeSourceQuery(query, start, end, filename, filters);
+  }
   async querySourceReport(
     query: string,
     timeRange: TimeRange,
@@ -290,17 +300,40 @@ export class ProfilerClient {
     console.log(`[${getBrandNameShort()}] Executing SOURCE query: ${query}`);
 
     const candidates = buildFilenameCandidates(sourceRef.filename);
+    const seen = new Map<string, number>();
     let last: SourceQueryResult | undefined;
+
     for (const filename of candidates) {
+      console.log(`[${getBrandNameShort()}] Source reference: filename=${filename}`);
       const result = await this.executeSourceQuery(query, start, end, filename, filters);
       last = result;
+
       if (result.record.byteLength > 0) {
-        const unique = new Set(parseSourceArrow(result.record).map(l => l.filename));
-        if (unique.size === 1) return result;
+        const lines = parseSourceArrow(result.record);
+        if (getUniqueFilenames(lines).length === 1) {
+          return result;
+        }
+
+        if (seen.size === 0) {
+          for (const line of lines) {
+            seen.set(line.filename, (seen.get(line.filename) ?? 0) + line.cumulative);
+          }
+        }
       }
-      if (result.total <= 0n) break;
+
+      if (result.total <= 0n) {
+        break;
+      }
     }
-    return last!;
+
+    const candidatesOut =
+      seen.size > 0
+        ? [...seen.entries()]
+            .map(([filename, cumulative]) => ({filename, cumulative}))
+            .sort((a, b) => b.cumulative - a.cumulative)
+        : undefined;
+
+    return {...last!, candidates: candidatesOut};
   }
 
   async getProjects(): Promise<{org: Organization; project: Project}[]> {
@@ -314,17 +347,19 @@ export class ProfilerClient {
 
 export type {Organization, Project};
 
-// Full workspace-relative path first, then basename and
-// grow toward the front.
 function buildFilenameCandidates(filename: string): string[] {
   const parts = filename.split('/').filter(Boolean);
-  if (parts.length === 0) return [filename];
+  if (parts.length === 0) {
+    return [filename];
+  }
 
   const full = parts.join('/');
   const out: string[] = [full];
   for (let i = parts.length - 1; i >= 1; i--) {
     const candidate = parts.slice(i).join('/');
-    if (candidate !== full) out.push(candidate);
+    if (candidate !== full) {
+      out.push(candidate);
+    }
   }
   return out;
 }

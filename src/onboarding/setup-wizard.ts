@@ -38,19 +38,19 @@ export async function showSetupWizard(
     return null;
   }
 
-  await setMode(selected.mode);
-
   if (selected.mode === 'cloud') {
     const authenticated = await signInWithOAuth();
     if (!authenticated) {
       return null;
     }
+    await setMode('cloud');
     await showSuccessMessage(_context, 'cloud');
   } else {
     const urlSet = await promptForSelfHostedUrl();
     if (!urlSet) {
       return null;
     }
+    await setMode('oss');
     await showSuccessMessage(_context, 'oss');
   }
 
