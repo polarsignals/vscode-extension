@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import {getPresetById, type QueryPreset} from '../presets/preset-definitions';
-import {getConfig, getBrandNameShort, getAutoScrollToAnnotation} from '../config/settings';
+import {
+  getConfig,
+  getBrandNameShort,
+  getAutoScrollToAnnotation,
+  type PolarSignalsConfig,
+} from '../config/settings';
 import {ProfilerClient} from '../api/profiler-client';
 import {
   parseSourceArrow,
@@ -16,6 +21,45 @@ import {getStatusBar} from '../ui/status-bar';
 import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
 
 /**
+ * Show a user-facing error for a profile fetch failure. Classifies the cause:
+ *  - auth/setup errors get a "Set Up" button that opens the setup wizard,
+ *  - OSS-mode network errors point the user at their configured apiUrl,
+ *  - everything else falls through to a generic message.
+ */
+export async function reportProfileError(
+  error: unknown,
+  config: PolarSignalsConfig | null,
+): Promise<void> {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (message.includes('not configured') || message.includes('Please sign in')) {
+    const choice = await vscode.window.showErrorMessage(
+      `Failed to fetch profile: ${message}`,
+      'Set Up',
+    );
+    if (choice === 'Set Up') {
+      await vscode.commands.executeCommand('polarSignals.setupMode');
+    }
+  } else if (config?.mode === 'oss' && isConnectionError(error)) {
+    vscode.window.showErrorMessage(
+      `Failed to connect to Parca at ${config.apiUrl}. Check if the server is running and the URL is correct in settings.`,
+    );
+  } else {
+    vscode.window.showErrorMessage(`Failed to fetch profile: ${message}`);
+  }
+  console.error('Error fetching profile:', error);
+}
+
+function isConnectionError(error: unknown): boolean {
+  // Browser fetch failures surface as TypeError ("Failed to fetch").
+  if (error instanceof TypeError) return true;
+  const code =
+    (error as {code?: string; cause?: {code?: string}})?.code ??
+    (error as {cause?: {code?: string}})?.cause?.code;
+  return code === 'ECONNREFUSED' || code === 'ENOTFOUND' || code === 'ETIMEDOUT';
+}
+
+/**
  * Fetch profiling data using a specific preset ID without showing the picker.
  * Used for post-onboarding quick start flow.
  */
@@ -23,54 +67,32 @@ export async function fetchWithPresetCommand(
   context: vscode.ExtensionContext,
   presetId: string = 'cpu-15m',
 ): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage('No active file open. Please open a source file first.');
+    return;
+  }
+
+  const preset = getPresetById(presetId);
+  if (!preset) {
+    vscode.window.showWarningMessage(
+      `Preset "${presetId}" not found, opening query configurator...`,
+    );
+    await vscode.commands.executeCommand('polarSignals.fetchProfile');
+    return;
+  }
+
   try {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      vscode.window.showErrorMessage('No active file open. Please open a source file first.');
-      return;
-    }
-
-    const preset = getPresetById(presetId);
-    if (!preset) {
-      vscode.window.showWarningMessage(
-        `Preset "${presetId}" not found, opening query configurator...`,
-      );
-      await vscode.commands.executeCommand('polarSignals.fetchProfile');
-      return;
-    }
-
     await fetchWithPreset(context, editor, preset);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (errorMessage.includes('not configured') || errorMessage.includes('Please sign in')) {
-      const choice = await vscode.window.showErrorMessage(
-        `Failed to fetch profile: ${errorMessage}`,
-        'Set Up',
-      );
-      if (choice === 'Set Up') {
-        await vscode.commands.executeCommand('polarSignals.setupMode');
-      }
-    } else {
-      const config = await getConfig(context).catch(() => null);
-      if (
-        config?.mode === 'oss' &&
-        (errorMessage.includes('fetch') ||
-          errorMessage.includes('network') ||
-          errorMessage.includes('ECONNREFUSED'))
-      ) {
-        vscode.window.showErrorMessage(
-          `Failed to connect to Parca at ${config.apiUrl}. Check if the server is running and the URL is correct in settings.`,
-        );
-      } else {
-        vscode.window.showErrorMessage(`Failed to fetch profile: ${errorMessage}`);
-      }
-    }
-    console.error('Error fetching profile with preset:', error);
+    const config = await getConfig(context).catch(() => null);
+    await reportProfileError(error, config);
   }
 }
 
 /**
- * Internal function to fetch profile using a preset.
+ * Fetch profile using a preset against the given editor. Shared by the
+ * preset-picker command and the post-onboarding quick-start flow.
  */
 export async function fetchWithPreset(
   context: vscode.ExtensionContext,
@@ -128,6 +150,9 @@ export async function fetchWithPreset(
         if (allLineData.length === 0) {
           getStatusBar().showNoProfile();
           console.log(`[${brandName}] No profiling data found for ${fileName}`);
+          vscode.window.showWarningMessage(
+            'No profiling data found for this file in the selected time range',
+          );
           return;
         }
       }

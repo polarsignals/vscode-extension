@@ -280,6 +280,11 @@ export class ProfilerClient {
     return {record, source, unit, total, filtered};
   }
 
+  /**
+   * Fetch SOURCE for a known-exact filename without the suffix-trimming retry
+   * loop. Use this when the filename is already a full indexed path (e.g.
+   * after the user picks one from the candidates list).
+   */
   async fetchSourceExact(
     query: string,
     timeRange: TimeRange,
@@ -289,6 +294,7 @@ export class ProfilerClient {
     const {start, end} = this.parseTimeRange(timeRange);
     return this.executeSourceQuery(query, start, end, filename, filters);
   }
+
   async querySourceReport(
     query: string,
     timeRange: TimeRange,
@@ -302,37 +308,29 @@ export class ProfilerClient {
     const candidates = buildFilenameCandidates(sourceRef.filename);
     const seen = new Map<string, number>();
     let last: SourceQueryResult | undefined;
-
     for (const filename of candidates) {
       console.log(`[${getBrandNameShort()}] Source reference: filename=${filename}`);
       const result = await this.executeSourceQuery(query, start, end, filename, filters);
       last = result;
-
       if (result.record.byteLength > 0) {
         const lines = parseSourceArrow(result.record);
-        if (getUniqueFilenames(lines).length === 1) {
-          return result;
-        }
-
+        if (getUniqueFilenames(lines).length === 1) return result;
+        // First multi-match attempt has the widest view of the profile;
+        // narrower retries are strict subsets, so snapshot once.
         if (seen.size === 0) {
           for (const line of lines) {
             seen.set(line.filename, (seen.get(line.filename) ?? 0) + line.cumulative);
           }
         }
       }
-
-      if (result.total <= 0n) {
-        break;
-      }
+      if (result.total <= 0n) break;
     }
-
     const candidatesOut =
       seen.size > 0
         ? [...seen.entries()]
             .map(([filename, cumulative]) => ({filename, cumulative}))
             .sort((a, b) => b.cumulative - a.cumulative)
         : undefined;
-
     return {...last!, candidates: candidatesOut};
   }
 
@@ -347,19 +345,17 @@ export class ProfilerClient {
 
 export type {Organization, Project};
 
+// Full workspace-relative path first, then basename and
+// grow toward the front.
 function buildFilenameCandidates(filename: string): string[] {
   const parts = filename.split('/').filter(Boolean);
-  if (parts.length === 0) {
-    return [filename];
-  }
+  if (parts.length === 0) return [filename];
 
   const full = parts.join('/');
   const out: string[] = [full];
   for (let i = parts.length - 1; i >= 1; i--) {
     const candidate = parts.slice(i).join('/');
-    if (candidate !== full) {
-      out.push(candidate);
-    }
+    if (candidate !== full) out.push(candidate);
   }
   return out;
 }

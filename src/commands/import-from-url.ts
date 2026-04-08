@@ -9,6 +9,7 @@ import {
   type SourceLineData,
 } from '../converters/source-arrow-converter';
 import {getAnnotations} from '../annotations/annotation-manager';
+import {pickCandidateAndRequery} from './pick-candidate';
 import {sessionStore} from '../state/session-store';
 import {getStatusBar} from '../ui/status-bar';
 import {decodeFilters} from '../filters/filter-encoding';
@@ -112,7 +113,7 @@ export async function importFromUrlCommand(context: vscode.ExtensionContext): Pr
 
         progress.report({message: 'Fetching line-level profiling data...'});
         const protoFilters = convertToProtoFilters(parsed.profileFilters);
-        const sourceResult = await client.querySourceReport(
+        let sourceResult = await client.querySourceReport(
           query,
           timeRange,
           {
@@ -122,13 +123,23 @@ export async function importFromUrlCommand(context: vscode.ExtensionContext): Pr
         );
 
         progress.report({message: 'Processing profiling data...'});
-        const allLineData = parseSourceArrow(sourceResult.record);
+        let allLineData = parseSourceArrow(sourceResult.record);
 
         if (allLineData.length === 0) {
-          vscode.window.showErrorMessage(
-            'No source files found in profile data for this time range',
+          const picked = await pickCandidateAndRequery(sourceResult, currentFileName, filename =>
+            client.fetchSourceExact(query, timeRange, filename, protoFilters),
           );
-          return;
+          if (picked) {
+            sourceResult = picked;
+            allLineData = parseSourceArrow(sourceResult.record);
+          }
+
+          if (allLineData.length === 0) {
+            vscode.window.showErrorMessage(
+              'No source files found in profile data for this time range',
+            );
+            return;
+          }
         }
 
         const uniqueFilenames = getUniqueFilenames(allLineData);
