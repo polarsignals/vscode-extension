@@ -19,6 +19,8 @@ On first use, the extension will prompt you to choose a mode:
 1. **Polar Signals Cloud**: Uses OAuth to sign in with your Polar Signals account
 2. **Self-hosted Parca**: Connects to a local or remote Parca instance (no authentication)
 
+Or you can run the setup wizard via Command Palette: **Polar Signals: Setup Mode**. 
+
 ## Usage
 
 ### Quick Start with Presets
