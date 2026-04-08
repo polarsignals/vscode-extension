@@ -262,9 +262,7 @@ export class ProfilerClient {
       filter: filters,
     };
 
-    const response = await this.client.query(request, {
-      meta: this.getAuthMeta(),
-    });
+    const response = await this.client.query(request, {meta: this.getAuthMeta()});
 
     if (response.response.report.oneofKind !== 'source') {
       throw new Error(`Expected SOURCE report type, got ${response.response.report.oneofKind}`);
@@ -291,7 +289,6 @@ export class ProfilerClient {
     const {start, end} = this.parseTimeRange(timeRange);
     return this.executeSourceQuery(query, start, end, filename, filters);
   }
-
   async querySourceReport(
     query: string,
     timeRange: TimeRange,

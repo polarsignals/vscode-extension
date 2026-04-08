@@ -4,6 +4,8 @@ node_modules/
 *.d.ts
 !src/types/*.d.ts
 dist/
+out/
+.vscode-test/
 .docs/
 .claude/
 .env

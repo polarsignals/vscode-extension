@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [1.3.2](https://github.com/polarsignals/vscode-extension/compare/v1.3.1...v1.3.2) (2026-04-07)
+
+
+### Bug Fixes
+
+* add a retry mechanism for filenames that might not match serverside ([d5f70d6](https://github.com/polarsignals/vscode-extension/commit/d5f70d64370a8c64f011a0189326559ae24b2dd0))
+
 ## [1.3.1](https://github.com/polarsignals/vscode-extension/compare/v1.3.0...v1.3.1) (2026-03-19)
 
 ## [1.3.0](https://github.com/polarsignals/vscode-extension/compare/v1.2.1...v1.3.0) (2026-03-17)
