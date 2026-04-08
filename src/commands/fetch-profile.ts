@@ -10,6 +10,7 @@ import {
 } from '../converters/source-arrow-converter';
 import {getAnnotations} from '../annotations/annotation-manager';
 import {pickCandidateAndRequery} from './pick-candidate';
+import {reportProfileError} from './fetch-with-preset';
 import {QueryConfigurator} from '../ui/query-configurator';
 import {sessionStore} from '../state/session-store';
 import {getStatusBar} from '../ui/status-bar';
@@ -181,21 +182,8 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
       },
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     const config = await getConfig(context).catch(() => null);
-    if (
-      config?.mode === 'oss' &&
-      (errorMessage.includes('fetch') ||
-        errorMessage.includes('network') ||
-        errorMessage.includes('ECONNREFUSED'))
-    ) {
-      vscode.window.showErrorMessage(
-        `Failed to connect to Parca at ${config.apiUrl}. Check if the server is running and the URL is correct in settings.`,
-      );
-    } else {
-      vscode.window.showErrorMessage(`Failed to fetch profile: ${errorMessage}`);
-    }
-    console.error('Error fetching profile:', error);
+    await reportProfileError(error, config);
   }
 }
 

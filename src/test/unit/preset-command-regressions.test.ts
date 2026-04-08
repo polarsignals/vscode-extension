@@ -169,6 +169,7 @@ describe('preset command regressions', () => {
     await expect(fetchWithPresetCommand({} as never, 'cpu-15m')).resolves.toBeUndefined();
     expect(showErrorMessage).toHaveBeenCalledWith(
       'Failed to fetch profile: Please sign in to Polar Signals Cloud',
+      'Set Up',
     );
   });
 

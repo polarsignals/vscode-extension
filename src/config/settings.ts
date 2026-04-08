@@ -33,7 +33,9 @@ export interface PolarSignalsConfig {
 }
 
 export function getMode(): ProfilerMode | null {
-  return vscode.workspace.getConfiguration(CONFIG_SECTION).get<ProfilerMode>('mode') ?? null;
+  const mode = vscode.workspace.getConfiguration(CONFIG_SECTION).get<string>('mode');
+  if (mode === 'cloud' || mode === 'oss') return mode;
+  return null;
 }
 
 export async function setMode(mode: ProfilerMode): Promise<void> {

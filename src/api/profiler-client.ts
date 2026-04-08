@@ -309,6 +309,7 @@ export class ProfilerClient {
     const seen = new Map<string, number>();
     let last: SourceQueryResult | undefined;
     for (const filename of candidates) {
+      console.log(`[${getBrandNameShort()}] Source reference: filename=${filename}`);
       const result = await this.executeSourceQuery(query, start, end, filename, filters);
       last = result;
       if (result.record.byteLength > 0) {

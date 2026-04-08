@@ -21,6 +21,6 @@ export async function selectPresetCommand(context: vscode.ExtensionContext): Pro
     await fetchWithPreset(context, editor, preset);
   } catch (error) {
     const config = await getConfig(context).catch(() => null);
-    reportProfileError(error, config);
+    await reportProfileError(error, config);
   }
 }

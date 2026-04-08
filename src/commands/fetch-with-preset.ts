@@ -21,20 +21,33 @@ import {getStatusBar} from '../ui/status-bar';
 import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
 
 /**
- * Show a user-facing error for a profile fetch failure. When the underlying
- * cause looks like a network/connection failure in OSS mode, point the user
- * at their configured apiUrl instead of showing a generic message.
+ * Show a user-facing error for a profile fetch failure. Classifies the cause:
+ *  - auth/setup errors get a "Set Up" button that opens the setup wizard,
+ *  - OSS-mode network errors point the user at their configured apiUrl,
+ *  - everything else falls through to a generic message.
  */
-export function reportProfileError(error: unknown, config: PolarSignalsConfig | null): void {
+export async function reportProfileError(
+  error: unknown,
+  config: PolarSignalsConfig | null,
+): Promise<void> {
   const message = error instanceof Error ? error.message : String(error);
-  if (config?.mode === 'oss' && isConnectionError(error)) {
+
+  if (message.includes('not configured') || message.includes('Please sign in')) {
+    const choice = await vscode.window.showErrorMessage(
+      `Failed to fetch profile: ${message}`,
+      'Set Up',
+    );
+    if (choice === 'Set Up') {
+      await vscode.commands.executeCommand('polarSignals.setupMode');
+    }
+  } else if (config?.mode === 'oss' && isConnectionError(error)) {
     vscode.window.showErrorMessage(
       `Failed to connect to Parca at ${config.apiUrl}. Check if the server is running and the URL is correct in settings.`,
     );
   } else {
     vscode.window.showErrorMessage(`Failed to fetch profile: ${message}`);
   }
-  console.error('Error fetching profile with preset:', error);
+  console.error('Error fetching profile:', error);
 }
 
 function isConnectionError(error: unknown): boolean {
@@ -73,7 +86,7 @@ export async function fetchWithPresetCommand(
     await fetchWithPreset(context, editor, preset);
   } catch (error) {
     const config = await getConfig(context).catch(() => null);
-    reportProfileError(error, config);
+    await reportProfileError(error, config);
   }
 }
 
