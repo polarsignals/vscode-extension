@@ -17,7 +17,7 @@ import {type ProfileFilter} from '../filters/filter-types';
 import {convertToProtoFilters} from '../filters/filter-converter';
 import {findMatchingFile} from '../uri/file-matcher';
 
-interface ParsedPolarSignalsUrl {
+export interface ParsedPolarSignalsUrl {
   expression?: string;
   profileType?: string;
   labelMatchers: Record<string, string>;
@@ -271,7 +271,7 @@ export async function importFromUrlCommand(context: vscode.ExtensionContext): Pr
 /**
  * Parse a Polar Signals Cloud URL and extract query configuration.
  */
-function parsePolarSignalsUrl(urlString: string): ParsedPolarSignalsUrl {
+export function parsePolarSignalsUrl(urlString: string): ParsedPolarSignalsUrl {
   const url = new URL(urlString);
   const params = url.searchParams;
 
@@ -319,7 +319,7 @@ function parsePolarSignalsUrl(urlString: string): ParsedPolarSignalsUrl {
 /**
  * Parse a profile expression like "parca_agent:samples:count:cpu:nanoseconds:delta{comm=\"api\"}"
  */
-function parseExpression(expression: string): {
+export function parseExpression(expression: string): {
   profileType: string;
   labelMatchers: Record<string, string>;
 } {
@@ -347,7 +347,7 @@ function parseExpression(expression: string): {
 /**
  * Parse time selection format like "relative:minute|15" or "absolute:..."
  */
-function parseTimeSelection(timeSelection: string): string {
+export function parseTimeSelection(timeSelection: string): string {
   if (timeSelection.startsWith('relative:')) {
     const parts = timeSelection.slice(9).split('|');
     const unit = parts[0];
@@ -368,7 +368,7 @@ function parseTimeSelection(timeSelection: string): string {
   return '15m';
 }
 
-function computeTimeRange(durationMs: number): string {
+export function computeTimeRange(durationMs: number): string {
   const minutes = Math.round(durationMs / 60000);
 
   if (minutes <= 5) return '5m';

@@ -347,7 +347,7 @@ export type {Organization, Project};
 
 // Full workspace-relative path first, then basename and
 // grow toward the front.
-function buildFilenameCandidates(filename: string): string[] {
+export function buildFilenameCandidates(filename: string): string[] {
   const parts = filename.split('/').filter(Boolean);
   if (parts.length === 0) return [filename];
 

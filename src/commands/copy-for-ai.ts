@@ -59,7 +59,7 @@ const langMap: Record<string, string> = {
   rb: 'ruby',
 };
 
-function getHumanReadableProfileType(profileType: string): string {
+export function getHumanReadableProfileType(profileType: string): string {
   if (wellKnownProfiles[profileType]) return wellKnownProfiles[profileType];
   const normalized = profileType
     .split(':')
@@ -70,19 +70,19 @@ function getHumanReadableProfileType(profileType: string): string {
   return match ? wellKnownProfiles[match] : profileType;
 }
 
-function formatTimeRange(timeRange: string | {from: number; to: number}): string {
+export function formatTimeRange(timeRange: string | {from: number; to: number}): string {
   if (typeof timeRange === 'string') return `last ${timeRange}`;
   return `${new Date(timeRange.from).toISOString()} to ${new Date(timeRange.to).toISOString()}`;
 }
 
-function formatValue(value: number, unit: string): string {
+export function formatValue(value: number, unit: string): string {
   if (value === 0) return '0';
   const format = unitFormatters[unit] ?? unitFormatters.count;
   const fmt = format.find(f => Math.abs(value) >= f.multiplier) ?? format[format.length - 1];
   return `${(value / fmt.multiplier).toFixed(2)}${fmt.symbol}`;
 }
 
-function formatPercentage(value: number, total: bigint, filtered: bigint): string {
+export function formatPercentage(value: number, total: bigint, filtered: bigint): string {
   const denom = Number(total + filtered);
   return denom === 0 ? '' : `${((value / denom) * 100).toFixed(1)}%`;
 }
