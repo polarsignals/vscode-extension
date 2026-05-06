@@ -6,9 +6,12 @@ import {renderCallbackPage} from '../src/auth/callback-page';
 
 const variant = process.argv[2] === 'error' ? 'error' : 'success';
 const sampleError = 'invalid_grant: The authorization code has expired or been revoked.';
+const logoSvg = fs.readFileSync(path.join(__dirname, '..', 'images', 'ps-logo.svg'), 'utf8');
 
 const html =
-  variant === 'error' ? renderCallbackPage('error', sampleError) : renderCallbackPage('success');
+  variant === 'error'
+    ? renderCallbackPage('error', logoSvg, sampleError)
+    : renderCallbackPage('success', logoSvg);
 
 const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ps-callback-preview-'));
 const outFile = path.join(outDir, `${variant}.html`);

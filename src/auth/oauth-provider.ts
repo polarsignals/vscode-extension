@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as http from 'http';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 import {renderCallbackPage} from './callback-page';
 
 const OAUTH_AUTH_ENDPOINT = 'https://identity.polarsignals.com/auth';
@@ -142,6 +144,10 @@ export class PolarSignalsAuthProvider implements vscode.AuthenticationProvider {
 
   private async startAuthFlow(codeChallenge: string, redirectUri: string): Promise<string> {
     const port = parseInt(new URL(redirectUri).port, 10);
+    const logoSvg = fs.readFileSync(
+      path.join(this.context.extensionPath, 'images', 'ps-logo.svg'),
+      'utf8',
+    );
 
     return await new Promise((resolve, reject) => {
       const server = http.createServer((req, res) => {
@@ -152,7 +158,7 @@ export class PolarSignalsAuthProvider implements vscode.AuthenticationProvider {
         if (error) {
           const description = url.searchParams.get('error_description') ?? error;
           res.writeHead(400, {'Content-Type': 'text/html'});
-          res.end(renderCallbackPage('error', description));
+          res.end(renderCallbackPage('error', logoSvg, description));
           server.close();
           reject(new Error(error));
           return;
@@ -160,7 +166,7 @@ export class PolarSignalsAuthProvider implements vscode.AuthenticationProvider {
 
         if (code) {
           res.writeHead(200, {'Content-Type': 'text/html'});
-          res.end(renderCallbackPage('success'));
+          res.end(renderCallbackPage('success', logoSvg));
           server.close();
           resolve(code);
           return;
