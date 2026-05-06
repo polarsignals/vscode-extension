@@ -76,15 +76,26 @@ export function renderCallbackPage(
     font-weight: 500;
     margin-bottom: 28px;
   }
+  .badge svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .badge-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .badge.success {
-    background: #E6F7F0;
-    color: #0F7C5B;
+    background: #F0F0FF;
+    color: #000000;
+    padding: 4px 16px 4px 4px;
+    gap: 10px;
   }
+  .badge.success .badge-icon {
+    width: 24px;
+    height: 24px;
+    background: #726AFF;
+    color: #ffffff;
+    border-radius: 999px;
+  }
+  .badge.success .badge-icon svg { width: 14px; height: 14px; }
   .badge.error {
     background: #FFECE7;
     color: #C73E27;
   }
-  .badge svg { width: 16px; height: 16px; flex-shrink: 0; }
   .heading {
     font-size: clamp(40px, 6.5vw, 64px);
     font-weight: 500;
@@ -140,7 +151,7 @@ export function renderCallbackPage(
   <div class="header" role="img" aria-label="Polar Signals">${logoSvg}</div>
   <main class="container">
     <div class="badge ${badgeClass}">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${badgeIcon}</svg>
+      <span class="badge-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${badgeIcon}</svg></span>
       ${title}
     </div>
     <h1 class="heading">${heading}</h1>
