@@ -255,6 +255,8 @@
     "test:e2e": "vscode-test",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.ts\"",
+    "preview:auth": "ts-node --transpile-only scripts/preview-callback.ts",
+    "preview:auth-error": "ts-node --transpile-only scripts/preview-callback.ts error",
     "prepare": "husky",
     "release": "commit-and-tag-version"
   },
