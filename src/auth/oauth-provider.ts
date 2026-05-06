@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as http from 'http';
 import * as crypto from 'crypto';
+import {renderCallbackPage} from './callback-page';
 
 const OAUTH_AUTH_ENDPOINT = 'https://identity.polarsignals.com/auth';
 const OAUTH_TOKEN_ENDPOINT = 'https://identity.polarsignals.com/token';
@@ -149,16 +150,9 @@ export class PolarSignalsAuthProvider implements vscode.AuthenticationProvider {
         const error = url.searchParams.get('error');
 
         if (error) {
+          const description = url.searchParams.get('error_description') ?? error;
           res.writeHead(400, {'Content-Type': 'text/html'});
-          res.end(`
-            <html>
-              <body style="font-family: system-ui; padding: 40px; text-align: center;">
-                <h1>Authentication Failed</h1>
-                <p>${url.searchParams.get('error_description') ?? error}</p>
-                <p>You can close this window.</p>
-              </body>
-            </html>
-          `);
+          res.end(renderCallbackPage('error', description));
           server.close();
           reject(new Error(error));
           return;
@@ -166,15 +160,7 @@ export class PolarSignalsAuthProvider implements vscode.AuthenticationProvider {
 
         if (code) {
           res.writeHead(200, {'Content-Type': 'text/html'});
-          res.end(`
-            <html>
-              <body style="font-family: system-ui; padding: 40px; text-align: center;">
-                <h1>Authentication Successful</h1>
-                <p>You can close this window and return to your editor.</p>
-                <script>window.close();</script>
-              </body>
-            </html>
-          `);
+          res.end(renderCallbackPage('success'));
           server.close();
           resolve(code);
           return;
