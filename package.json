@@ -26,7 +26,12 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onUri"
+    "onUri",
+    "onView:polarSignals.statusView",
+    "onView:polarSignals.queriesView",
+    "onView:polarSignals.queryBuilderView",
+    "onView:polarSignals.currentFileView",
+    "onView:polarSignals.recentView"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -58,10 +63,6 @@
       {
         "command": "polarSignals.fetchWithPreset",
         "title": "Polar Signals: Fetch with Preset"
-      },
-      {
-        "command": "polarSignals.showStatusMenu",
-        "title": "Polar Signals: Quick Actions"
       },
       {
         "command": "polarSignals.configureDefaults",
@@ -102,6 +103,139 @@
       {
         "command": "polarSignals.showMcpOptions",
         "title": "Polar Signals: Use Polar Signals with AI Tools"
+      },
+      {
+        "command": "polarSignals.runPreset",
+        "title": "Run Preset",
+        "icon": "$(play)"
+      },
+      {
+        "command": "polarSignals.refreshViews",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "polarSignals.openHotLine",
+        "title": "Reveal Hot Line"
+      },
+      {
+        "command": "polarSignals.openRecentProfile",
+        "title": "Open Profiled File"
+      },
+      {
+        "command": "polarSignals.removeRecentProfile",
+        "title": "Clear",
+        "icon": "$(close)"
+      },
+      {
+        "command": "polarSignals.signIn",
+        "title": "Polar Signals: Sign In"
+      },
+      {
+        "command": "polarSignals.queryBuilder.setProfileType",
+        "title": "Set Profile Type"
+      },
+      {
+        "command": "polarSignals.queryBuilder.setTimeRange",
+        "title": "Set Time Range"
+      },
+      {
+        "command": "polarSignals.queryBuilder.addFilter",
+        "title": "Add Filter"
+      },
+      {
+        "command": "polarSignals.queryBuilder.editFilter",
+        "title": "Edit Filter"
+      },
+      {
+        "command": "polarSignals.queryBuilder.removeFilter",
+        "title": "Remove Filter",
+        "icon": "$(close)"
+      },
+      {
+        "command": "polarSignals.queryBuilder.reset",
+        "title": "Reset Query",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "polarSignals.queryBuilder.run",
+        "title": "Run Query",
+        "icon": "$(play)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "polarSignals",
+          "title": "Polar Signals",
+          "icon": "images/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "polarSignals": [
+        {
+          "id": "polarSignals.statusView",
+          "name": "Status",
+          "icon": "images/icon.png",
+          "contextualTitle": "Polar Signals"
+        },
+        {
+          "id": "polarSignals.queriesView",
+          "name": "Queries",
+          "icon": "images/icon.png",
+          "contextualTitle": "Polar Signals"
+        },
+        {
+          "id": "polarSignals.queryBuilderView",
+          "name": "Build Query",
+          "icon": "images/icon.png",
+          "contextualTitle": "Polar Signals"
+        },
+        {
+          "id": "polarSignals.currentFileView",
+          "name": "Current File",
+          "icon": "images/icon.png",
+          "contextualTitle": "Polar Signals"
+        },
+        {
+          "id": "polarSignals.recentView",
+          "name": "Recent",
+          "icon": "images/icon.png",
+          "contextualTitle": "Polar Signals"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "polarSignals.statusView",
+        "when": "!polarSignals.configured",
+        "contents": "Connect to Polar Signals Cloud or a self-hosted Parca instance to see profiling data inline with your code.\n[Sign in to Polar Signals Cloud](command:polarSignals.signIn)\n[Use self-hosted Parca](command:polarSignals.setupMode)\n[Learn more](https://www.polarsignals.com/docs)"
+      },
+      {
+        "view": "polarSignals.queriesView",
+        "when": "!polarSignals.configured",
+        "contents": "Sign in or configure a self-hosted Parca to see your queries.\n[Sign in](command:polarSignals.signIn)\n[Set up](command:polarSignals.setupMode)"
+      },
+      {
+        "view": "polarSignals.queryBuilderView",
+        "when": "!polarSignals.configured",
+        "contents": "Connect to Polar Signals to build a query.\n[Sign in](command:polarSignals.signIn)\n[Set up](command:polarSignals.setupMode)"
+      },
+      {
+        "view": "polarSignals.currentFileView",
+        "when": "polarSignals.configured && !polarSignals.hasCurrentFileProfile",
+        "contents": "No profile for this file yet.\n[Pick a preset](command:polarSignals.selectPreset)\n[Configure a query](command:polarSignals.fetchProfile)"
+      },
+      {
+        "view": "polarSignals.currentFileView",
+        "when": "!polarSignals.configured",
+        "contents": "Connect to Polar Signals to profile this file.\n[Sign in](command:polarSignals.signIn)"
+      },
+      {
+        "view": "polarSignals.recentView",
+        "when": "polarSignals.configured",
+        "contents": "Profiles you've fetched in this session will appear here.\n[Pick a preset](command:polarSignals.selectPreset)"
       }
     ],
     "menus": {
@@ -113,6 +247,108 @@
         {
           "command": "polarSignals.showMcpOptions",
           "when": "false"
+        },
+        {
+          "command": "polarSignals.runPreset",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.openHotLine",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.openRecentProfile",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.removeRecentProfile",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.refreshViews",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.queryBuilder.setProfileType",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.queryBuilder.setTimeRange",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.queryBuilder.addFilter",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.queryBuilder.editFilter",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.queryBuilder.removeFilter",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.queryBuilder.reset",
+          "when": "false"
+        },
+        {
+          "command": "polarSignals.queryBuilder.run",
+          "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "polarSignals.setupMode",
+          "when": "view == polarSignals.statusView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "polarSignals.fetchProfile",
+          "when": "view == polarSignals.queriesView && polarSignals.configured",
+          "group": "navigation@1"
+        },
+        {
+          "command": "polarSignals.refreshViews",
+          "when": "view == polarSignals.queriesView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "polarSignals.queryBuilder.run",
+          "when": "view == polarSignals.queryBuilderView && polarSignals.configured",
+          "group": "navigation@1"
+        },
+        {
+          "command": "polarSignals.queryBuilder.reset",
+          "when": "view == polarSignals.queryBuilderView && polarSignals.configured",
+          "group": "navigation@2"
+        },
+        {
+          "command": "polarSignals.fetchProfile",
+          "when": "view == polarSignals.currentFileView && polarSignals.configured",
+          "group": "navigation@1"
+        },
+        {
+          "command": "polarSignals.clearAnnotations",
+          "when": "view == polarSignals.currentFileView && polarSignals.hasCurrentFileProfile",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "polarSignals.runPreset",
+          "when": "view == polarSignals.queriesView && viewItem == preset",
+          "group": "inline"
+        },
+        {
+          "command": "polarSignals.removeRecentProfile",
+          "when": "view == polarSignals.recentView && viewItem == recentProfile",
+          "group": "inline"
+        },
+        {
+          "command": "polarSignals.queryBuilder.removeFilter",
+          "when": "view == polarSignals.queryBuilderView && viewItem == queryFilter",
+          "group": "inline"
         }
       ]
     },

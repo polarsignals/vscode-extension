@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import {type SourceLineData} from '../converters/source-arrow-converter';
 import {type TimeRange} from '../api/profiler-client';
 import {type QueryConfig} from '../ui/query-configurator';
@@ -48,13 +49,19 @@ export function isSameQueryConfig(a: QueryConfig, b: LastQueryConfig): boolean {
  */
 class SessionStoreImpl {
   private readonly cache = new Map<string, CachedProfile>();
+  private readonly originalPaths = new Map<string, string>();
   private lastQueryConfig: LastQueryConfig | null = null;
+  private readonly _onDidChange = new vscode.EventEmitter<void>();
+  readonly onDidChange = this._onDidChange.event;
 
   store(filePath: string, data: CachedProfile): void {
-    this.cache.set(this.normalizeKey(filePath), {
+    const key = this.normalizeKey(filePath);
+    this.cache.set(key, {
       ...data,
       timestamp: Date.now(),
     });
+    this.originalPaths.set(key, filePath);
+    this._onDidChange.fire();
   }
 
   get(filePath: string): CachedProfile | undefined {
@@ -66,15 +73,28 @@ class SessionStoreImpl {
   }
 
   remove(filePath: string): void {
-    this.cache.delete(this.normalizeKey(filePath));
+    const key = this.normalizeKey(filePath);
+    const existed = this.cache.delete(key);
+    this.originalPaths.delete(key);
+    if (existed) this._onDidChange.fire();
   }
 
   clear(): void {
+    const hadEntries = this.cache.size > 0;
     this.cache.clear();
+    this.originalPaths.clear();
+    if (hadEntries) this._onDidChange.fire();
   }
 
   getCachedPaths(): string[] {
-    return Array.from(this.cache.keys());
+    return Array.from(this.originalPaths.values());
+  }
+
+  getEntries(): Array<{filePath: string; profile: CachedProfile}> {
+    return Array.from(this.cache.entries()).map(([key, profile]) => ({
+      filePath: this.originalPaths.get(key) ?? key,
+      profile,
+    }));
   }
 
   get size(): number {
@@ -83,6 +103,7 @@ class SessionStoreImpl {
 
   setLastQueryConfig(config: LastQueryConfig): void {
     this.lastQueryConfig = config;
+    this._onDidChange.fire();
   }
 
   getLastQueryConfig(): LastQueryConfig | null {

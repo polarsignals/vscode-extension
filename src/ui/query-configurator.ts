@@ -97,7 +97,11 @@ function flexibleWellKnownProfileMatching(name: string): WellKnownProfile | unde
   return matchedKey != null ? wellKnownProfiles[matchedKey] : undefined;
 }
 
-function formatProfileType(name: string): {label: string; description: string; detail?: string} {
+export function formatProfileType(name: string): {
+  label: string;
+  description: string;
+  detail?: string;
+} {
   const wellKnown = wellKnownProfiles[name] ?? flexibleWellKnownProfileMatching(name);
   if (wellKnown) {
     return {

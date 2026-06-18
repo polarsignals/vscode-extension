@@ -9,7 +9,6 @@ import {
 } from '../converters/source-arrow-converter';
 import {getAnnotations} from '../annotations/annotation-manager';
 import {sessionStore, type LastQueryConfig} from '../state/session-store';
-import {getStatusBar} from '../ui/status-bar';
 
 /**
  * Try to resolve a remote filename (from profiling data) to a local file path.
@@ -63,7 +62,6 @@ export async function silentFetchProfile(options: SilentFetchOptions): Promise<v
   const allLineData = parseSourceArrow(sourceResult.record);
   if (allLineData.length === 0) {
     console.log(`[${brandName}] Auto-fetch: No profiling data found for ${fileName}`);
-    getStatusBar().showNoProfile();
     return;
   }
 
@@ -121,12 +119,6 @@ export async function silentFetchProfile(options: SilentFetchOptions): Promise<v
     ...cacheData,
     lineData,
     sourceFile: {filename: selectedFilename},
-  });
-
-  getStatusBar().showActiveProfile({
-    profileType: queryConfig.profileType,
-    timeRange: queryConfig.timeRange,
-    labelMatchers: queryConfig.labelMatchers,
   });
 
   console.log(`[${brandName}] Auto-fetch: Applied ${lineData.length} annotations for ${fileName}`);

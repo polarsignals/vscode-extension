@@ -3,7 +3,6 @@ import {CompressionType, setCompressionCodec} from '@uwdata/flechette';
 import * as lz4 from 'lz4js';
 import {fetchProfileCommand, restoreCachedAnnotations} from './commands/fetch-profile';
 import {clearAnnotationsCommand} from './commands/clear-annotations';
-import {showStatusMenuCommand} from './commands/show-status-menu';
 import {copyLineForAI, copyFileForAI} from './commands/copy-for-ai';
 import {configureDefaultsCommand} from './commands/configure-defaults';
 import {selectPresetCommand} from './commands/select-preset';
@@ -15,7 +14,6 @@ import {
   getAutoFetchOnFileOpen,
   invalidateConfigCache,
 } from './config/settings';
-import {getStatusBar, disposeStatusBar} from './ui/status-bar';
 import {PolarSignalsUriHandler} from './uri/uri-handler';
 import {disposeAnnotations} from './annotations/annotation-manager';
 import {checkAndRunSetup, showSetupWizard, showProjectPicker} from './onboarding/setup-wizard';
@@ -25,6 +23,7 @@ import {sessionStore, isSameQueryConfig} from './state/session-store';
 import {silentFetchProfile} from './commands/silent-fetch';
 import {registerAuthProvider, getAuthProvider} from './auth/oauth-provider';
 import {refreshMcpOnboarding, setupMcpCommand, showMcpOptions} from './mcp/onboarding';
+import {registerViews} from './views/register';
 
 export async function activate(context: vscode.ExtensionContext) {
   setCompressionCodec(CompressionType.LZ4_FRAME, {
@@ -36,8 +35,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const brandName = getMode() ? getBrandName() : 'Polar Signals Profiler';
   console.log(`${brandName} extension is now active`);
-
-  getStatusBar();
 
   repoMappingStore.initialize(context);
 
@@ -61,11 +58,6 @@ export async function activate(context: vscode.ExtensionContext) {
     async () => {
       await clearAnnotationsCommand();
     },
-  );
-
-  const showStatusMenu = vscode.commands.registerCommand(
-    'polarSignals.showStatusMenu',
-    withSetupCheck(showStatusMenuCommand),
   );
 
   const configureDefaults = vscode.commands.registerCommand(
@@ -227,8 +219,6 @@ export async function activate(context: vscode.ExtensionContext) {
       const abortController = new AbortController();
       currentAbortController = abortController;
 
-      getStatusBar().showLoading();
-
       silentFetchProfile({
         context,
         editor,
@@ -262,7 +252,6 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     fetchProfile,
     clearAnnotations,
-    showStatusMenu,
     configureDefaults,
     selectPreset,
     fetchWithPreset,
@@ -280,6 +269,8 @@ export async function activate(context: vscode.ExtensionContext) {
     autoFetchCleanup,
   );
 
+  registerViews(context);
+
   void refreshMcpOnboarding(context, {
     interactive: false,
     notify: true,
@@ -290,5 +281,4 @@ export async function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
   console.log('Parca Profiler extension is now deactivated');
   disposeAnnotations();
-  disposeStatusBar();
 }

@@ -25,7 +25,6 @@ suite('Extension', () => {
       'polarSignals.clearAnnotations',
       'polarSignals.selectPreset',
       'polarSignals.fetchWithPreset',
-      'polarSignals.showStatusMenu',
       'polarSignals.configureDefaults',
       'polarSignals.importFromUrl',
       'polarSignals.signOut',
