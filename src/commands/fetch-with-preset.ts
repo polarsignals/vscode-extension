@@ -17,7 +17,6 @@ import {
 import {getAnnotations} from '../annotations/annotation-manager';
 import {pickCandidateAndRequery} from './pick-candidate';
 import {sessionStore} from '../state/session-store';
-import {getStatusBar} from '../ui/status-bar';
 import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
 
 /**
@@ -148,7 +147,6 @@ export async function fetchWithPreset(
         }
 
         if (allLineData.length === 0) {
-          getStatusBar().showNoProfile();
           console.log(`[${brandName}] No profiling data found for ${fileName}`);
           vscode.window.showWarningMessage(
             'No profiling data found for this file in the selected time range',
@@ -216,12 +214,6 @@ export async function fetchWithPreset(
         profileType: preset.profileType,
         timeRange: preset.timeRange,
         labelMatchers: preset.labelMatchers ?? {},
-      });
-
-      getStatusBar().showActiveProfile({
-        profileType: preset.profileType,
-        timeRange: preset.timeRange,
-        labelMatchers: preset.labelMatchers,
       });
 
       if (getAutoScrollToAnnotation()) {

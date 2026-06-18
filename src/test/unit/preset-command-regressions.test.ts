@@ -85,15 +85,6 @@ vi.mock('../../commands/pick-candidate', () => ({
   pickCandidateAndRequery,
 }));
 
-const showNoProfile = vi.fn();
-const showActiveProfile = vi.fn();
-vi.mock('../../ui/status-bar', () => ({
-  getStatusBar: () => ({
-    showNoProfile,
-    showActiveProfile,
-  }),
-}));
-
 const applyAnnotations = vi.fn();
 vi.mock('../../annotations/annotation-manager', () => ({
   getAnnotations: () => ({applyAnnotations}),
@@ -148,7 +139,6 @@ describe('preset command regressions', () => {
     expect(showWarningMessage).toHaveBeenCalledWith(
       'No profiling data found for this file in the selected time range',
     );
-    expect(showNoProfile).toHaveBeenCalled();
   });
 
   it('selectPresetCommand returns early without fetching when picker is cancelled', async () => {
@@ -215,7 +205,6 @@ describe('preset command regressions', () => {
     expect(showWarningMessage).toHaveBeenCalledWith(
       'No profiling data found for this file in the selected time range',
     );
-    expect(showNoProfile).toHaveBeenCalled();
   });
 
   it('shows OSS-specific connection error message when querySourceReport fails with ECONNREFUSED', async () => {

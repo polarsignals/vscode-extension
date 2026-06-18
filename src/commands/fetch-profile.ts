@@ -13,7 +13,6 @@ import {pickCandidateAndRequery} from './pick-candidate';
 import {reportProfileError} from './fetch-with-preset';
 import {QueryConfigurator} from '../ui/query-configurator';
 import {sessionStore} from '../state/session-store';
-import {getStatusBar} from '../ui/status-bar';
 import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
 
 export async function fetchProfileCommand(context: vscode.ExtensionContext): Promise<void> {
@@ -86,7 +85,6 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
           }
 
           if (allLineData.length === 0) {
-            getStatusBar().showNoProfile();
             console.log(`[${brandName}] No profiling data found for ${fileName}`);
             vscode.window.showWarningMessage(
               'No profiling data found for this file in the selected time range',
@@ -151,12 +149,6 @@ export async function fetchProfileCommand(context: vscode.ExtensionContext): Pro
           labelMatchers: queryConfig.labelMatchers,
         });
 
-        getStatusBar().showActiveProfile({
-          profileType: queryConfig.profileType,
-          timeRange: queryConfig.timeRange,
-          labelMatchers: queryConfig.labelMatchers,
-        });
-
         const labelFilters =
           Object.keys(queryConfig.labelMatchers).length > 0
             ? Object.entries(queryConfig.labelMatchers)
@@ -206,12 +198,6 @@ export function restoreCachedAnnotations(editor: vscode.TextEditor): boolean {
     cached.total,
     cached.filtered,
   );
-
-  getStatusBar().showActiveProfile({
-    profileType: cached.queryConfig.profileType,
-    timeRange: cached.queryConfig.timeRange,
-    labelMatchers: cached.queryConfig.labelMatchers,
-  });
 
   const brandName = getBrandNameShort();
   console.log(`[${brandName}] Restored cached annotations for ${filePath}`);

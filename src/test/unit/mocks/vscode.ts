@@ -34,3 +34,17 @@ export const Range = class {
 export const Uri = {
   parse: (s: string) => ({toString: () => s}),
 };
+
+export class EventEmitter<T> {
+  private listeners: ((e: T) => void)[] = [];
+  readonly event = (listener: (e: T) => void) => {
+    this.listeners.push(listener);
+    return {dispose: () => (this.listeners = this.listeners.filter(l => l !== listener))};
+  };
+  fire(data: T): void {
+    for (const listener of this.listeners) listener(data);
+  }
+  dispose(): void {
+    this.listeners = [];
+  }
+}

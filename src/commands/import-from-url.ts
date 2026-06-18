@@ -11,7 +11,6 @@ import {
 import {getAnnotations} from '../annotations/annotation-manager';
 import {pickCandidateAndRequery} from './pick-candidate';
 import {sessionStore} from '../state/session-store';
-import {getStatusBar} from '../ui/status-bar';
 import {decodeFilters} from '../filters/filter-encoding';
 import {type ProfileFilter} from '../filters/filter-types';
 import {convertToProtoFilters} from '../filters/filter-converter';
@@ -243,12 +242,6 @@ export async function importFromUrlCommand(context: vscode.ExtensionContext): Pr
         });
 
         sessionStore.setLastQueryConfig({
-          profileType,
-          timeRange,
-          labelMatchers,
-        });
-
-        getStatusBar().showActiveProfile({
           profileType,
           timeRange,
           labelMatchers,
