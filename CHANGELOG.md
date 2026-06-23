@@ -1,6 +1,15 @@
 
 # Changelog
 
+## [1.5.0](https://github.com/polarsignals/vscode-extension/compare/v1.4.1...v1.5.0) (2026-06-23)
+
+
+### Features
+
+* **auth:** redesign OAuth callback success/error page ([bc225ee](https://github.com/polarsignals/vscode-extension/commit/bc225ee93582edfb7f6e26ea85df85e26f121a26))
+* **auth:** restyle success badge with brand lavender + purple chip ([10a927a](https://github.com/polarsignals/vscode-extension/commit/10a927aafc6ea502a13d14b5fb3cc528a7811ad8)), closes [#F0F0](https://github.com/polarsignals/vscode-extension/issues/F0F0) [#726](https://github.com/polarsignals/vscode-extension/issues/726)
+* **sidebar:** add an activity-bar sidebar alongside the command palette ([b535f5f](https://github.com/polarsignals/vscode-extension/commit/b535f5fbc45272dab55abcce108f10b215b42a57))
+
 ## [1.4.1](https://github.com/polarsignals/vscode-extension/compare/v1.4.0...v1.4.1) (2026-04-08)
 
 ## [1.4.0](https://github.com/polarsignals/vscode-extension/compare/v1.3.2...v1.4.0) (2026-04-08)
