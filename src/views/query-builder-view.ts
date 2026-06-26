@@ -6,6 +6,7 @@ import {sessionStore} from '../state/session-store';
 import {fetchWithPreset, reportProfileError} from '../commands/fetch-with-preset';
 import {type QueryPreset} from '../presets/preset-definitions';
 import {RefreshableTreeProvider} from './tree-provider';
+import {trackQueryBuilderTimeRangeSelection} from '../usage';
 
 interface Draft {
   profileType: string | undefined;
@@ -129,6 +130,7 @@ export class QueryBuilderViewProvider extends RefreshableTreeProvider<Row> {
     });
     if (!picked) return;
     this.draft.timeRange = picked.value;
+    trackQueryBuilderTimeRangeSelection(picked.value);
     this.refresh();
   }
 
