@@ -10,6 +10,7 @@ import {getAuthProvider, PolarSignalsAuthProvider} from '../auth/oauth-provider'
 import {fetchWithPresetCommand} from '../commands/fetch-with-preset';
 import {checkAndRunSetup, showProjectPicker} from '../onboarding/setup-wizard';
 import {getMode, setMode, getProjectId} from '../config/settings';
+import {registerTracked} from '../usage';
 
 export function registerViews(context: vscode.ExtensionContext): void {
   const status = new StatusViewProvider();
@@ -55,8 +56,8 @@ export function registerViews(context: vscode.ExtensionContext): void {
   void updateContextKeys();
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('polarSignals.refreshViews', refreshAll),
-    vscode.commands.registerCommand(
+    registerTracked('polarSignals.refreshViews', refreshAll),
+    registerTracked(
       'polarSignals.runPreset',
       // Inline view actions pass the tree node; the row's default command passes a string id.
       async (arg: string | {preset?: {id: string}}) => {
@@ -66,40 +67,29 @@ export function registerViews(context: vscode.ExtensionContext): void {
         if (isConfigured) await fetchWithPresetCommand(context, presetId);
       },
     ),
-    vscode.commands.registerCommand(
-      'polarSignals.openHotLine',
-      async (filePath: string, line: number) => {
-        await openHotLine(filePath, line);
-      },
-    ),
-    vscode.commands.registerCommand('polarSignals.openRecentProfile', async (filePath: string) => {
+    registerTracked('polarSignals.openHotLine', async (filePath: string, line: number) => {
+      await openHotLine(filePath, line);
+    }),
+    registerTracked('polarSignals.openRecentProfile', async (filePath: string) => {
       await openRecentProfile(filePath);
     }),
-    vscode.commands.registerCommand(
-      'polarSignals.removeRecentProfile',
-      (item: {filePath: string}) => {
-        removeRecentProfile(item);
-      },
-    ),
-    vscode.commands.registerCommand('polarSignals.queryBuilder.setProfileType', () =>
+    registerTracked('polarSignals.removeRecentProfile', (item: {filePath: string}) => {
+      removeRecentProfile(item);
+    }),
+    registerTracked('polarSignals.queryBuilder.setProfileType', () =>
       queryBuilder.chooseProfileType(),
     ),
-    vscode.commands.registerCommand('polarSignals.queryBuilder.setTimeRange', () =>
-      queryBuilder.chooseTimeRange(),
-    ),
-    vscode.commands.registerCommand('polarSignals.queryBuilder.addFilter', () =>
-      queryBuilder.addFilter(),
-    ),
-    vscode.commands.registerCommand('polarSignals.queryBuilder.editFilter', (label: string) =>
+    registerTracked('polarSignals.queryBuilder.setTimeRange', () => queryBuilder.chooseTimeRange()),
+    registerTracked('polarSignals.queryBuilder.addFilter', () => queryBuilder.addFilter()),
+    registerTracked('polarSignals.queryBuilder.editFilter', (label: string) =>
       queryBuilder.editFilter(label),
     ),
-    vscode.commands.registerCommand(
-      'polarSignals.queryBuilder.removeFilter',
-      (item: string | {label?: string}) => queryBuilder.removeFilter(item),
+    registerTracked('polarSignals.queryBuilder.removeFilter', (item: string | {label?: string}) =>
+      queryBuilder.removeFilter(item),
     ),
-    vscode.commands.registerCommand('polarSignals.queryBuilder.reset', () => queryBuilder.reset()),
-    vscode.commands.registerCommand('polarSignals.queryBuilder.run', () => queryBuilder.run()),
-    vscode.commands.registerCommand('polarSignals.signIn', async () => {
+    registerTracked('polarSignals.queryBuilder.reset', () => queryBuilder.reset()),
+    registerTracked('polarSignals.queryBuilder.run', () => queryBuilder.run()),
+    registerTracked('polarSignals.signIn', async () => {
       const session = await vscode.authentication.getSession(
         PolarSignalsAuthProvider.id,
         ['openid', 'profile', 'email', 'offline_access'],

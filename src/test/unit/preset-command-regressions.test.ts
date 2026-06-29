@@ -30,6 +30,9 @@ vi.mock('vscode', () => ({
   commands: {
     executeCommand,
   },
+  env: {
+    isTelemetryEnabled: false,
+  },
   ProgressLocation: {
     Notification: 15,
   },
@@ -56,6 +59,7 @@ vi.mock('../../presets/preset-picker', () => ({
 
 const getPresetById = vi.fn();
 vi.mock('../../presets/preset-definitions', () => ({
+  DEFAULT_PRESETS: [preset],
   getPresetById,
 }));
 

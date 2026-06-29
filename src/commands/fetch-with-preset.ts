@@ -18,6 +18,8 @@ import {getAnnotations} from '../annotations/annotation-manager';
 import {pickCandidateAndRequery} from './pick-candidate';
 import {sessionStore} from '../state/session-store';
 import {scrollToFirstAnnotatedLine} from '../ui/editor-utils';
+import {fetchProfileCommand} from './fetch-profile';
+import {trackPresetRun} from '../usage';
 
 /**
  * Show a user-facing error for a profile fetch failure. Classifies the cause:
@@ -77,9 +79,11 @@ export async function fetchWithPresetCommand(
     vscode.window.showWarningMessage(
       `Preset "${presetId}" not found, opening query configurator...`,
     );
-    await vscode.commands.executeCommand('polarSignals.fetchProfile');
+    await fetchProfileCommand(context);
     return;
   }
+
+  trackPresetRun(presetId);
 
   try {
     await fetchWithPreset(context, editor, preset);

@@ -24,6 +24,7 @@ import {silentFetchProfile} from './commands/silent-fetch';
 import {registerAuthProvider, getAuthProvider} from './auth/oauth-provider';
 import {refreshMcpOnboarding, setupMcpCommand, showMcpOptions} from './mcp/onboarding';
 import {registerViews} from './views/register';
+import {registerTracked, startTelemetry, stopTelemetry} from './usage';
 
 export async function activate(context: vscode.ExtensionContext) {
   setCompressionCodec(CompressionType.LZ4_FRAME, {
@@ -32,6 +33,8 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   registerAuthProvider(context);
+
+  void startTelemetry(context.extension.packageJSON.version);
 
   const brandName = getMode() ? getBrandName() : 'Polar Signals Profiler';
   console.log(`${brandName} extension is now active`);
@@ -48,31 +51,25 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   };
 
-  const fetchProfile = vscode.commands.registerCommand(
+  const fetchProfile = registerTracked(
     'polarSignals.fetchProfile',
     withSetupCheck(fetchProfileCommand),
   );
 
-  const clearAnnotations = vscode.commands.registerCommand(
-    'polarSignals.clearAnnotations',
-    async () => {
-      await clearAnnotationsCommand();
-    },
-  );
+  const clearAnnotations = registerTracked('polarSignals.clearAnnotations', async () => {
+    await clearAnnotationsCommand();
+  });
 
-  const configureDefaults = vscode.commands.registerCommand(
-    'polarSignals.configureDefaults',
-    async () => {
-      await configureDefaultsCommand();
-    },
-  );
+  const configureDefaults = registerTracked('polarSignals.configureDefaults', async () => {
+    await configureDefaultsCommand();
+  });
 
-  const selectPreset = vscode.commands.registerCommand(
+  const selectPreset = registerTracked(
     'polarSignals.selectPreset',
     withSetupCheck(selectPresetCommand),
   );
 
-  const fetchWithPreset = vscode.commands.registerCommand(
+  const fetchWithPreset = registerTracked(
     'polarSignals.fetchWithPreset',
     async (presetId?: string) => {
       const isConfigured = await checkAndRunSetup(context);
@@ -82,16 +79,16 @@ export async function activate(context: vscode.ExtensionContext) {
     },
   );
 
-  const importFromUrl = vscode.commands.registerCommand(
+  const importFromUrl = registerTracked(
     'polarSignals.importFromUrl',
     withSetupCheck(importFromUrlCommand),
   );
 
-  const setupMode = vscode.commands.registerCommand('polarSignals.setupMode', async () => {
+  const setupMode = registerTracked('polarSignals.setupMode', async () => {
     await showSetupWizard(context);
   });
 
-  const signOut = vscode.commands.registerCommand('polarSignals.signOut', async () => {
+  const signOut = registerTracked('polarSignals.signOut', async () => {
     const authProvider = getAuthProvider();
     const sessions = authProvider ? await authProvider.getSessions() : [];
 
@@ -121,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  const switchProject = vscode.commands.registerCommand('polarSignals.switchProject', async () => {
+  const switchProject = registerTracked('polarSignals.switchProject', async () => {
     if (getMode() !== 'cloud') {
       vscode.window.showInformationMessage(
         'Project switching is only available in Polar Signals Cloud mode.',
@@ -135,44 +132,39 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  const manageRepoMappings = vscode.commands.registerCommand(
-    'polarSignals.manageRepoMappings',
-    async () => {
-      await manageRepoMappingsCommand();
-    },
-  );
+  const manageRepoMappings = registerTracked('polarSignals.manageRepoMappings', async () => {
+    await manageRepoMappingsCommand();
+  });
 
-  const setUpMcp = vscode.commands.registerCommand('polarSignals.setUpMcp', async () => {
+  const setUpMcp = registerTracked('polarSignals.setUpMcp', async () => {
     await setupMcpCommand(context);
   });
 
-  const showMcpOptionsCmd = vscode.commands.registerCommand(
-    'polarSignals.showMcpOptions',
-    async () => {
-      await showMcpOptions(context);
-    },
-  );
+  const showMcpOptionsCmd = registerTracked('polarSignals.showMcpOptions', async () => {
+    await showMcpOptions(context);
+  });
 
-  const copyLineForAICmd = vscode.commands.registerCommand(
+  const copyLineForAICmd = registerTracked(
     'polarSignals.copyLineForAI',
     async (args: {line: number}) => {
       await copyLineForAI(args);
     },
   );
 
-  const copyFileForAICmd = vscode.commands.registerCommand(
-    'polarSignals.copyFileForAI',
-    async () => {
-      await copyFileForAI();
-    },
-  );
+  const copyFileForAICmd = registerTracked('polarSignals.copyFileForAI', async () => {
+    await copyFileForAI();
+  });
 
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(e => {
     if (e.affectsConfiguration('polarSignals')) {
       invalidateConfigCache();
     }
+    const modeChanged = e.affectsConfiguration('polarSignals.mode');
+    if (modeChanged) {
+      void startTelemetry(context.extension.packageJSON.version);
+    }
     if (
-      e.affectsConfiguration('polarSignals.mode') ||
+      modeChanged ||
       e.affectsConfiguration('polarSignals.mcpOnboardingMode') ||
       e.affectsConfiguration('polarSignals.cloudUrl')
     ) {
@@ -278,7 +270,8 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 }
 
-export function deactivate() {
+export async function deactivate() {
   console.log('Parca Profiler extension is now deactivated');
+  await stopTelemetry();
   disposeAnnotations();
 }
