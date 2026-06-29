@@ -1,6 +1,13 @@
 
 # Changelog
 
+## [1.6.0](https://github.com/polarsignals/vscode-extension/compare/v1.5.0...v1.6.0) (2026-06-29)
+
+
+### Features
+
+* add anonymous usage telemetry ([91839a5](https://github.com/polarsignals/vscode-extension/commit/91839a5e50bdcd6e7080c1232b01d24c9338547f))
+
 ## [1.5.0](https://github.com/polarsignals/vscode-extension/compare/v1.4.1...v1.5.0) (2026-06-23)
 
 
